@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: retain_dsa
+      POSTGRES_USER: retain
+      POSTGRES_PASSWORD: retain-local
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U retain -d retain_dsa']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - retain-postgres:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      target: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: ${PORT:-3000}
+      HOST: 0.0.0.0
+      DATABASE_URL: postgresql://retain:retain-local@postgres:5432/retain_dsa
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      CHOKIDAR_USEPOLLING: 'true'
+    ports:
+      - '127.0.0.1:${PORT:-3000}:${PORT:-3000}'
+    volumes:
+      - .:/workspace
+      - retain-node-modules:/workspace/node_modules
+    init: true
+    stop_grace_period: 130s
+
+volumes:
+  retain-postgres:
+  retain-node-modules:
