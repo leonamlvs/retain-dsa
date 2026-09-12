@@ -1,0 +1,307 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ApplicationState {
+  id              Int       @id
+  stateRevision   BigInt    @default(0)
+  catalogRevision BigInt    @default(0)
+  sourceSequence  BigInt    @default(0)
+  activeConfig    String
+  lastBusinessAt  DateTime? @db.Timestamptz(3)
+}
+
+model Configuration {
+  version     String                    @id
+  parameters  Json
+  contentHash String
+  activations ConfigurationActivation[]
+  attempts    Attempt[]
+  decisions   Decision[]
+}
+
+model ConfigurationActivation {
+  id            String        @id @db.Uuid
+  sequence      BigInt        @unique
+  activatedAt   DateTime      @db.Timestamptz(3)
+  version       String
+  configuration Configuration @relation(fields: [version], references: [version], onDelete: Restrict)
+}
+
+model CatalogRevision {
+  revision       BigInt              @id
+  observedAt     DateTime            @db.Timestamptz(3)
+  acceptedAt     DateTime            @db.Timestamptz(3)
+  sourceSequence BigInt              @unique
+  queryVersion   String
+  mappingVersion String
+  contentHash    String
+  snapshot       Json
+  decisions      Decision[]
+  certificates   SupplyCertificate[]
+}
+
+model Problem {
+  id                String             @id @db.Uuid
+  provider          String
+  providerProblemId String
+  frontendId        String
+  title             String
+  slug              String
+  url               String
+  difficulty        String
+  paidOnly          Boolean
+  available         Boolean
+  metadataHash      String
+  lastSyncedAt      DateTime           @db.Timestamptz(3)
+  tags              ProblemTag[]
+  memberships       CurriculumItem[]
+  recommendations   Recommendation[]
+  attempts          Attempt[]
+  userStates        UserProblemState[]
+
+  @@unique([provider, providerProblemId])
+}
+
+model ProblemTag {
+  problemId String  @db.Uuid
+  tag       String
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, tag])
+  @@index([tag])
+}
+
+model Skill {
+  id              String              @id @db.Uuid
+  slug            String              @unique
+  name            String
+  active          Boolean
+  tags            String[]
+  mappingVersion  String
+  memberships     CurriculumItem[]
+  recommendations Recommendation[]
+  attempts        Attempt[]
+  memoryStates    SkillMemoryState[]
+  discoveryStates DiscoveryState[]
+  certificates    SupplyCertificate[]
+}
+
+model Curriculum {
+  id           String           @id @db.Uuid
+  provider     String
+  slug         String
+  name         String
+  contentHash  String
+  lastSyncedAt DateTime         @db.Timestamptz(3)
+  items        CurriculumItem[]
+
+  @@unique([provider, slug])
+}
+
+model CurriculumItem {
+  id           String     @id @db.Uuid
+  curriculumId String     @db.Uuid
+  problemId    String     @db.Uuid
+  skillId      String     @db.Uuid
+  active       Boolean
+  position     Int?
+  addedAt      DateTime   @db.Timestamptz(3)
+  removedAt    DateTime?  @db.Timestamptz(3)
+  curriculum   Curriculum @relation(fields: [curriculumId], references: [id], onDelete: Restrict)
+  problem      Problem    @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  skill        Skill      @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@unique([curriculumId, problemId, skillId])
+}
+
+model LocalUser {
+  id              String                @id @db.Uuid
+  singleton       Int                   @unique @default(1)
+  generation      String                @unique @db.Uuid
+  sourceSequence  BigInt                @default(0)
+  createdAt       DateTime              @db.Timestamptz(3)
+  lastResetAt     DateTime?             @db.Timestamptz(3)
+  recommendations Recommendation[]
+  attempts        Attempt[]
+  memoryStates    SkillMemoryState[]
+  problemStates   UserProblemState[]
+  decisions       Decision[]
+  lifecycle       RecommendationEvent[]
+  work            WorkRequest[]
+}
+
+model Decision {
+  id              String           @id @db.Uuid
+  userId          String           @db.Uuid
+  generation      String           @db.Uuid
+  sourceSequence  BigInt
+  sourceCutoff    BigInt
+  evaluatedAt     DateTime         @db.Timestamptz(3)
+  catalogRevision BigInt
+  configVersion   String
+  inputs          Json
+  auditOutputs    Json
+  user            LocalUser        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  catalog         CatalogRevision  @relation(fields: [catalogRevision], references: [revision], onDelete: Restrict)
+  configuration   Configuration    @relation(fields: [configVersion], references: [version], onDelete: Restrict)
+  recommendations Recommendation[]
+
+  @@unique([userId, generation, sourceSequence])
+}
+
+model Recommendation {
+  id               String                @id @db.Uuid
+  userId           String                @db.Uuid
+  generation       String                @db.Uuid
+  problemId        String                @db.Uuid
+  skillId          String                @db.Uuid
+  difficulty       String
+  issuedAt         DateTime              @db.Timestamptz(3)
+  issuanceSnapshot Json
+  admissionBasis   Json
+  decisionId       String                @db.Uuid
+  status           String
+  position         Int
+  user             LocalUser             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem          Problem               @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  skill            Skill                 @relation(fields: [skillId], references: [id], onDelete: Restrict)
+  decision         Decision              @relation(fields: [decisionId], references: [id], onDelete: Restrict)
+  attempt          Attempt?
+  events           RecommendationEvent[]
+
+  @@index([userId, status, position])
+}
+
+model RecommendationEvent {
+  id               String         @id @db.Uuid
+  userId           String         @db.Uuid
+  generation       String         @db.Uuid
+  sourceSequence   BigInt
+  recommendationId String         @db.Uuid
+  kind             String
+  at               DateTime       @db.Timestamptz(3)
+  details          Json
+  user             LocalUser      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recommendation   Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, generation, sourceSequence])
+}
+
+model Attempt {
+  id                 String           @id @db.Uuid
+  userId             String           @db.Uuid
+  generation         String           @db.Uuid
+  sourceSequence     BigInt
+  recommendationId   String           @unique @db.Uuid
+  problemId          String           @db.Uuid
+  skillId            String           @db.Uuid
+  difficulty         String
+  historicalSnapshot Json
+  completedAt        DateTime         @db.Timestamptz(3)
+  completedLocalDate DateTime         @db.Date
+  timezone           String
+  durationSeconds    Int?
+  idempotencyKey     String
+  canonicalPayload   Json
+  configVersion      String
+  feedback           AttemptFeedback?
+  user               LocalUser        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recommendation     Recommendation   @relation(fields: [recommendationId], references: [id], onDelete: Restrict)
+  problem            Problem          @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  skill              Skill            @relation(fields: [skillId], references: [id], onDelete: Restrict)
+  configuration      Configuration    @relation(fields: [configVersion], references: [version], onDelete: Restrict)
+
+  @@unique([userId, generation, idempotencyKey])
+  @@unique([userId, generation, sourceSequence])
+  @@index([userId, completedLocalDate])
+}
+
+model AttemptFeedback {
+  attemptId        String  @id @db.Uuid
+  independence     String
+  recognition      String
+  implementation   String
+  complexity       String
+  scoreUnits       Int
+  appliedCap       String
+  rating           String
+  feedbackVersion  String
+  scorerVersion    String
+  memoryTransition Json
+  attempt          Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+}
+
+model SkillMemoryState {
+  userId     String    @db.Uuid
+  skillId    String    @db.Uuid
+  difficulty String
+  state      Json
+  user       LocalUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill      Skill     @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@id([userId, skillId, difficulty])
+}
+
+model UserProblemState {
+  userId           String    @db.Uuid
+  problemId        String    @db.Uuid
+  firstCompletedAt DateTime  @db.Timestamptz(3)
+  lastCompletedAt  DateTime  @db.Timestamptz(3)
+  completionCount  Int
+  cooldownUntil    DateTime  @db.Timestamptz(3)
+  user             LocalUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem          Problem   @relation(fields: [problemId], references: [id], onDelete: Restrict)
+
+  @@id([userId, problemId])
+}
+
+model DiscoveryState {
+  fingerprint   String   @id
+  skillId       String   @db.Uuid
+  difficulty    String
+  criteria      Json
+  scanId        String   @db.Uuid
+  offset        Int
+  observedIds   String[]
+  previousTotal Int?
+  startedAt     DateTime @db.Timestamptz(3)
+  updatedAt     DateTime @db.Timestamptz(3)
+  exhausted     Boolean
+  skill         Skill    @relation(fields: [skillId], references: [id], onDelete: Restrict)
+}
+
+model SupplyCertificate {
+  id              String          @id @db.Uuid
+  skillId         String          @db.Uuid
+  difficulty      String
+  fingerprint     String
+  scanId          String          @db.Uuid
+  catalogRevision BigInt
+  observedAt      DateTime        @db.Timestamptz(3)
+  validUntil      DateTime        @db.Timestamptz(3)
+  providerIds     String[]
+  evidence        Json
+  skill           Skill           @relation(fields: [skillId], references: [id], onDelete: Restrict)
+  catalog         CatalogRevision @relation(fields: [catalogRevision], references: [revision], onDelete: Restrict)
+}
+
+model WorkRequest {
+  id          String    @id @db.Uuid
+  userId      String    @db.Uuid
+  generation  String    @db.Uuid
+  kind        String
+  requestedAt DateTime  @db.Timestamptz(3)
+  nextRunAt   DateTime  @db.Timestamptz(3)
+  attempts    Int       @default(0)
+  status      String
+  details     Json
+  user        LocalUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextRunAt])
+}
