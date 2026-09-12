@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+package-lock.json
+packages/api-client/src/generated.ts
+packages/api-client/openapi.json
+apps/api/src/generated/prisma
+.scratch
+.test-runs
+.github/skills/impeccable
+.github/agents/impeccable-*.agent.md
