@@ -21,7 +21,7 @@ jobs:
       - run: yarn check:client
       - run: yarn test:unit
       - run: yarn test:provider
-      - run: yarn test:integration
+      - run: yarn test:db
       - run: yarn playwright install --with-deps chromium
       - run: yarn test:e2e
       - run: yarn build

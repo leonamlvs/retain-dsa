@@ -13,7 +13,7 @@ RUN yarn install --immutable
 FROM dependencies AS development
 COPY . .
 EXPOSE 3000
-CMD ["sh", "-c", "yarn install --immutable && yarn generate:db && yarn migrate:deploy && yarn workspace @retain/api dev"]
+CMD ["sh", "-c", "yarn install --immutable && yarn generate:db && yarn db:migrate && yarn workspace @retain/api dev"]
 
 FROM dependencies AS build
 COPY . .
