@@ -12,27 +12,23 @@ import {
   getCurriculum,
   getRecommendation,
   getRecommendations,
+  getSession,
   resetProgress,
   saveAttempt,
-  synchronizeSession,
   type Recommendation,
 } from './services/api.js';
-import {
-  beginResponseFence,
-  currentResponseState,
-  stateChangedEvent,
-  stateStorageKey,
-} from './services/state-guard.js';
-import { reconcileTimerStorage, useTimer } from './hooks/use-timer.js';
+import { clearTimerStorage, reconcileTimerStorage, useTimer } from './hooks/use-timer.js';
 
 const createQueryClient = () =>
   new QueryClient({
     defaultOptions: { queries: { retry: 1, staleTime: 10_000 } },
   });
 const keys = {
-  curriculum: ['curriculum'],
-  recommendations: ['recommendations'],
-  analytics: ['analytics'],
+  session: ['session'] as const,
+  curriculum: (generation: string) => ['curriculum', generation] as const,
+  recommendations: (generation: string) => ['recommendations', generation] as const,
+  recommendation: (generation: string, id: string) => ['recommendation', generation, id] as const,
+  analytics: (generation: string, timezone: string) => ['analytics', generation, timezone] as const,
 } as const;
 const formatTimer = (seconds: number) =>
   [Math.floor(seconds / 3600), Math.floor((seconds % 3600) / 60), seconds % 60]
@@ -41,64 +37,50 @@ const formatTimer = (seconds: number) =>
 function useStudyData() {
   const queryClient = useQueryClient();
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  // Persisted watermarks are advisory until this tab accepts a session.
-  const [knownState, setKnownState] = useState<ReturnType<typeof currentResponseState>>(null);
   const session = useQuery({
-    queryKey: ['session'],
-    queryFn: ({ signal }) => synchronizeSession(signal),
+    queryKey: keys.session,
+    queryFn: ({ signal }) => getSession(signal),
     retry: 1,
     staleTime: Infinity,
+    refetchOnWindowFocus: 'always',
   });
+  const generation = session.data?.generation;
   useEffect(() => {
-    const update = () => {
-      const state = currentResponseState();
-      if (state) reconcileTimerStorage(state);
-      setKnownState(state);
-    };
-    const storage = (event: StorageEvent) => {
-      if (event.key !== stateStorageKey) return;
-      beginResponseFence();
-      // Another tab is a hint to reconcile, never authority to lower our request fence.
-      void queryClient
-        .cancelQueries()
-        .then(() => queryClient.resetQueries({ queryKey: ['session'] }));
-    };
-    window.addEventListener(stateChangedEvent, update);
-    window.addEventListener('storage', storage);
-    return () => {
-      window.removeEventListener(stateChangedEvent, update);
-      window.removeEventListener('storage', storage);
-    };
+    const refreshSession = () => void queryClient.invalidateQueries({ queryKey: keys.session });
+    window.addEventListener('focus', refreshSession);
+    return () => window.removeEventListener('focus', refreshSession);
   }, [queryClient]);
-  const generation = knownState?.generation;
-  const scope = [knownState?.databaseId, generation];
+  useEffect(() => {
+    if (generation) reconcileTimerStorage(generation);
+  }, [generation]);
   const curriculum = useQuery({
-    queryKey: [...keys.curriculum, ...scope],
+    queryKey: keys.curriculum(generation ?? ''),
     queryFn: ({ signal }) => getCurriculum(signal),
-    enabled: session.isSuccess && Boolean(generation),
+    enabled: Boolean(generation),
     retry: false,
   });
   const recommendations = useQuery({
-    queryKey: [...keys.recommendations, ...scope],
+    queryKey: keys.recommendations(generation ?? ''),
     queryFn: ({ signal }) => getRecommendations(signal),
-    enabled: session.isSuccess && Boolean(generation),
+    enabled: Boolean(generation),
     retry: false,
     refetchInterval: (query) =>
       !query.state.error && query.state.data?.refill.status === 'REFILLING' ? 1500 : false,
   });
   const analytics = useQuery({
-    queryKey: [...keys.analytics, ...scope, timezone],
+    queryKey: keys.analytics(generation ?? '', timezone),
     queryFn: ({ signal }) => getAnalytics(timezone, signal),
-    enabled: session.isSuccess && Boolean(generation),
+    enabled: Boolean(generation),
     retry: false,
   });
   const recover = async () => {
-    beginResponseFence();
     await queryClient.cancelQueries();
-    await queryClient.resetQueries({ queryKey: ['session'] });
-    await queryClient.invalidateQueries({ queryKey: keys.curriculum });
-    await queryClient.invalidateQueries({ queryKey: keys.recommendations });
-    await queryClient.invalidateQueries({ queryKey: keys.analytics });
+    await queryClient.invalidateQueries({ queryKey: keys.session });
+    if (generation) {
+      await queryClient.invalidateQueries({ queryKey: keys.curriculum(generation) });
+      await queryClient.invalidateQueries({ queryKey: keys.recommendations(generation) });
+      await queryClient.invalidateQueries({ queryKey: ['analytics', generation] });
+    }
   };
   return {
     curriculum,
@@ -445,15 +427,15 @@ function ChallengeCard({
             >
               {timer.timer?.status === 'RUNNING' ? 'Pause' : 'Resume'}
             </button>
-            <button className="icon-button" onClick={timer.reset}>
-              Reset
+            <button className="icon-button" onClick={timer.clear}>
+              Clear
             </button>
           </>
         ) : (
           <button
             className="icon-button"
             disabled={anotherTimer}
-            title={anotherTimer ? 'Complete the current timed attempt first' : undefined}
+            title={anotherTimer ? 'Clear the current timer first' : undefined}
             onClick={() => timer.start(item.id)}
           >
             Start
@@ -474,22 +456,37 @@ function ResetControl({ generation }: { generation: string | undefined }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
   const cache = useQueryClient();
+  const adoptGeneration = async (nextGeneration: string) => {
+    await cache.cancelQueries();
+    cache.removeQueries({
+      predicate: (query) => query.queryKey[0] !== keys.session[0],
+    });
+    clearTimerStorage();
+    cache.setQueryData(keys.session, { generation: nextGeneration });
+    setOpen(false);
+    setValue('');
+  };
   const mutation = useMutation({
     mutationFn: () => resetProgress(generation!),
     onMutate: async () => {
-      beginResponseFence();
       await cache.cancelQueries();
     },
-    onSuccess: async () => {
-      await synchronizeSession();
-      setOpen(false);
-      setValue('');
-      cache.removeQueries({ queryKey: keys.recommendations, type: 'inactive' });
-      await cache.invalidateQueries();
+    onSuccess: async (result) => {
+      await adoptGeneration(result.generation);
     },
     onError: async () => {
-      await cache.resetQueries({ queryKey: ['session'] });
-      await cache.invalidateQueries();
+      await cache.invalidateQueries({ queryKey: keys.session, refetchType: 'none' });
+      try {
+        const current = await cache.fetchQuery({
+          queryKey: keys.session,
+          queryFn: ({ signal }) => getSession(signal),
+          staleTime: 0,
+        });
+        if (generation && current.generation !== generation)
+          await adoptGeneration(current.generation);
+      } catch {
+        /* Preserve the original reset failure and all local user state. */
+      }
     },
   });
   return (
@@ -539,12 +536,7 @@ function ChallengesPage({ data }: { data: ReturnType<typeof useStudyData> }) {
     data.recommendations.data?.items.some((item) => item.id === timer.timer?.recommendationId),
   );
   const recovered = useQuery({
-    queryKey: [
-      'recommendation',
-      currentResponseState()?.databaseId,
-      timer.timer?.recommendationId,
-      data.generation,
-    ],
+    queryKey: keys.recommendation(data.generation ?? '', timer.timer?.recommendationId ?? ''),
     queryFn: ({ signal }) => getRecommendation(timer.timer!.recommendationId, signal),
     enabled: timerIsActive && data.recommendations.isSuccess && !timerIsInQueue,
     retry: false,
@@ -552,7 +544,12 @@ function ChallengesPage({ data }: { data: ReturnType<typeof useStudyData> }) {
   const saved = async () => {
     if (selected && data.generation) timer.clearMatching(selected.id, data.generation);
     setSelected(null);
-    await cache.invalidateQueries();
+    if (!data.generation) return;
+    await Promise.all([
+      cache.invalidateQueries({ queryKey: keys.curriculum(data.generation) }),
+      cache.invalidateQueries({ queryKey: keys.recommendations(data.generation) }),
+      cache.invalidateQueries({ queryKey: ['analytics', data.generation] }),
+    ]);
   };
   return (
     <>
@@ -776,12 +773,7 @@ function Shell() {
         <Routes>
           <Route
             path="/challenges"
-            element={
-              <ChallengesPage
-                key={`${currentResponseState()?.databaseId}:${data.generation}`}
-                data={data}
-              />
-            }
+            element={<ChallengesPage key={data.generation} data={data} />}
           />
           <Route path="/analytics" element={<AnalyticsPage data={data} />} />
           <Route path="*" element={<Navigate to="/challenges" replace />} />
@@ -804,6 +796,13 @@ function Shell() {
 
 export function App() {
   const [queryClient] = useState(createQueryClient);
+  useEffect(() => {
+    try {
+      localStorage.removeItem('retain-dsa.state.v1');
+    } catch {
+      /* Remove the obsolete browser watermark when storage is available. */
+    }
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>

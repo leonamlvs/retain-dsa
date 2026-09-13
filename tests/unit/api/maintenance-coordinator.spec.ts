@@ -29,7 +29,6 @@ const need: DiscoveryNeed = {
 
 test('does no provider work when persisted discovery needs are already adequate', async () => {
   const study: MaintenanceStudyService = {
-    rebuildProjections: jest.fn(async () => undefined),
     discoveryNeeds: async () => [],
     currentCatalogRevision: async () => 1n,
     cachedSupply: async () => 25,
@@ -55,7 +54,6 @@ test('persists complete discovery before ranking and replenishes after provider 
   let revision = 1n;
   let accepted = 0;
   const study: MaintenanceStudyService = {
-    rebuildProjections: jest.fn(async () => undefined),
     discoveryNeeds: async () => [need],
     currentCatalogRevision: async () => revision,
     cachedSupply: async () => accepted,
@@ -98,7 +96,6 @@ test('persists complete discovery before ranking and replenishes after provider 
 test('restarts a changed provider scan within the same bounded operation', async () => {
   let accepted = 0;
   const study: MaintenanceStudyService = {
-    rebuildProjections: async () => undefined,
     discoveryNeeds: async () => [need],
     currentCatalogRevision: async () => 1n,
     cachedSupply: async () => 0,
@@ -140,7 +137,6 @@ test('one need retains its deadline across pages and drain stops new admission',
   let time = Date.parse('2026-01-01T00:00:00Z');
   const deadlines: number[] = [];
   const study: MaintenanceStudyService = {
-    rebuildProjections: async () => undefined,
     discoveryNeeds: async () => [need],
     currentCatalogRevision: async () => 1n,
     cachedSupply: async () => 0,

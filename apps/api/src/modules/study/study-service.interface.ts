@@ -7,13 +7,9 @@ import type {
   curriculumResponseSchema,
   recommendationDetailSchema,
   recommendationsResponseSchema,
+  resetProgressResponseSchema,
   sessionResponseSchema,
 } from './study.schema.js';
-
-export interface VersionedState {
-  generation: string;
-  stateRevision: string;
-}
 
 export interface AttemptResult {
   status: 200 | 201;
@@ -33,5 +29,5 @@ export interface StudyService {
   analytics(
     query: z.infer<typeof analyticsQuerySchema>,
   ): Promise<z.infer<typeof analyticsResponseSchema>>;
-  reset(generation: string): Promise<VersionedState>;
+  reset(generation: string): Promise<z.infer<typeof resetProgressResponseSchema>>;
 }

@@ -1,8 +1,5 @@
 import fc from 'fast-check';
-import {
-  evaluateQueue,
-  serializeQueueInput,
-} from '../../../apps/api/src/modules/scheduler/queue-engine.js';
+import { evaluateQueue } from '../../../apps/api/src/modules/scheduler/queue-engine.js';
 import type { QueueInput } from '../../../apps/api/src/modules/scheduler/queue-input.schema.js';
 import { defaultConfig } from '../../../apps/api/src/config/default-config.js';
 import { FsrsMemoryEngine } from '../../../apps/api/src/infrastructure/fsrs-memory-engine.js';
@@ -75,7 +72,7 @@ test('whole-queue reservation fills two progression slots beside three survivors
   expect(result.invalid).toHaveLength(0);
 });
 
-test('generated queues exclude unsafe candidates, respect capacity, deduplicate and replay identically', () => {
+test('generated queues exclude unsafe candidates, respect capacity, deduplicate and stay deterministic', () => {
   fc.assert(
     fc.property(
       fc.integer({ min: 1, max: 10 }),
@@ -93,9 +90,7 @@ test('generated queues exclude unsafe candidates, respect capacity, deduplicate 
             (candidate) => !candidate.problem.paidOnly && candidate.problem.available,
           ),
         ).toBe(true);
-        expect(evaluateQueue(serializeQueueInput(raw), memory).selectedRanked).toEqual(
-          result.selectedRanked,
-        );
+        expect(evaluateQueue(raw, memory).selectedRanked).toEqual(result.selectedRanked);
       },
     ),
     { numRuns: 100 },

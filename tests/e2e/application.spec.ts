@@ -131,6 +131,19 @@ test.describe.serial('isolated local application', () => {
     expect(await client.attempt.count()).toBe(0);
   });
 
+  test('clears running and paused timers and releases ownership immediately', async ({ page }) => {
+    await page.goto(`${baseUrl}/challenges`);
+    await page.getByRole('button', { name: 'Start' }).click();
+    await page.getByRole('button', { name: 'Clear' }).click();
+    await expect(page.getByRole('button', { name: 'Start' })).toBeEnabled();
+    await page.getByRole('button', { name: 'Start' }).click();
+    await page.getByRole('button', { name: 'Pause' }).click();
+    await page.getByRole('button', { name: 'Clear' }).click();
+    await expect(page.getByRole('button', { name: 'Start' })).toBeEnabled();
+    expect(await page.evaluate(() => localStorage.getItem('retain-dsa.timer.v1'))).toBeNull();
+    expect(await client.attempt.count()).toBe(0);
+  });
+
   test('saves feedback, renders analytics, and resets only user data', async ({ page }) => {
     await page.goto(`${baseUrl}/challenges`);
     await page.getByRole('button', { name: 'Complete' }).click();
@@ -164,15 +177,21 @@ test.describe.serial('isolated local application', () => {
     await page.goto(`${baseUrl}/challenges`);
     await page.getByRole('button', { name: 'Start' }).click();
     await page.getByRole('button', { name: 'Complete' }).click();
+    const generationBeforeReset = (await study.session()).generation;
     const other = await context.newPage();
     await other.goto(`${baseUrl}/challenges`);
     await other.getByRole('button', { name: 'Reset progress' }).click();
     await other.getByLabel(/Type/).fill('RESET');
     await other.getByRole('button', { name: 'Delete progress' }).click();
+    await expect
+      .poll(async () => (await study.session()).generation)
+      .not.toBe(generationBeforeReset);
+    await other.close();
+    await page.bringToFront();
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
     await expect(page.getByRole('dialog')).not.toBeVisible();
     await expect(page.getByRole('button', { name: 'Start' })).toBeVisible();
     expect(await page.evaluate(() => localStorage.getItem('retain-dsa.timer.v1'))).toBeNull();
-    await other.close();
   });
 
   test('reload recovers a retired issuance and allows its original completion', async ({

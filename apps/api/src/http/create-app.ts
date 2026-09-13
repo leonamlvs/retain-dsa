@@ -3,7 +3,7 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import swaggerUi from 'swagger-ui-express';
 import { z, ZodError } from 'zod';
 import { DomainError } from '../domain/domain-error.js';
-import type { StudyService, VersionedState } from '../modules/study/study-service.interface.js';
+import type { StudyService } from '../modules/study/study-service.interface.js';
 import type { Logger } from '../shared/observability/logger.interface.js';
 import { errorDetails } from '../shared/observability/error-details.js';
 import { healthSchema } from './health.schema.js';
@@ -19,14 +19,10 @@ import {
   recommendationDetailSchema,
   recommendationsResponseSchema,
   resetProgressSchema,
+  resetProgressResponseSchema,
   skillsResponseSchema,
   sessionResponseSchema,
 } from '../modules/study/study.schema.js';
-
-function applyVersion(response: Response, state: VersionedState): void {
-  response.set('X-Progress-Generation', state.generation);
-  response.set('X-State-Revision', state.stateRevision);
-}
 
 function validateOutput<T>(schema: z.ZodType<T>, value: unknown): T {
   const parsed = schema.safeParse(value);
@@ -67,7 +63,6 @@ export function createApp(
   });
   app.get('/api/v1/session', async (_request, response) => {
     const body = validateOutput(sessionResponseSchema, await study.session());
-    applyVersion(response, body);
     response.json(body);
   });
   app.get('/health', async (_request, response) => {
@@ -86,12 +81,10 @@ export function createApp(
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument()));
   app.get('/api/v1/curriculum', async (_request, response) => {
     const body = validateOutput(curriculumResponseSchema, await study.curriculum());
-    applyVersion(response, body);
     response.json(body);
   });
   app.get('/api/v1/recommendations', async (_request, response) => {
     const body = validateOutput(recommendationsResponseSchema, await study.recommendations());
-    applyVersion(response, body);
     response.json(body);
   });
   app.get('/api/v1/recommendations/:id', async (request, response) => {
@@ -103,7 +96,6 @@ export function createApp(
         error: { code: 'RECOMMENDATION_NOT_FOUND', message: 'Recommendation not found.' },
       });
     }
-    applyVersion(response, body);
     return response.json(body);
   });
   app.post('/api/v1/attempts', async (request, response) => {
@@ -117,7 +109,6 @@ export function createApp(
       );
     const result = await study.complete(createAttemptSchema.parse(request.body), key);
     const body = validateOutput(attemptResponseSchema, result.body);
-    applyVersion(response, body);
     response.status(result.status).json(body);
     if (result.status === 201) requestRefill();
   });
@@ -126,27 +117,22 @@ export function createApp(
       analyticsResponseSchema,
       await study.analytics(analyticsQuerySchema.parse(request.query)),
     );
-    applyVersion(response, body);
     response.json(body);
   });
   app.get('/api/v1/analytics/heatmap', async (request, response) => {
     const body = await study.analytics(analyticsQuerySchema.parse(request.query));
-    applyVersion(response, body);
     response.json(
       validateOutput(heatmapResponseSchema, {
         generation: body.generation,
-        stateRevision: body.stateRevision,
         heatmap: body.heatmap,
       }),
     );
   });
   app.get('/api/v1/analytics/skills', async (request, response) => {
     const body = await study.analytics(analyticsQuerySchema.parse(request.query));
-    applyVersion(response, body);
     response.json(
       validateOutput(skillsResponseSchema, {
         generation: body.generation,
-        stateRevision: body.stateRevision,
         bySkill: body.bySkill,
         byDifficulty: body.byDifficulty,
       }),
@@ -154,20 +140,17 @@ export function createApp(
   });
   app.get('/api/v1/analytics/evolution', async (request, response) => {
     const body = await study.analytics(analyticsQuerySchema.parse(request.query));
-    applyVersion(response, body);
     response.json(
       validateOutput(evolutionResponseSchema, {
         generation: body.generation,
-        stateRevision: body.stateRevision,
         evolution: body.evolution,
       }),
     );
   });
   app.delete('/api/v1/progress', async (request, response) => {
     const input = resetProgressSchema.parse(request.body);
-    const state = await study.reset(input.generation);
-    applyVersion(response, state);
-    response.status(204).end();
+    const body = validateOutput(resetProgressResponseSchema, await study.reset(input.generation));
+    response.status(200).json(body);
     requestRefill();
   });
   app.use('/api', (_request, response) =>
@@ -181,7 +164,6 @@ export function createApp(
       method: _request.method,
       path: _request.path,
     };
-    if (error instanceof DomainError && error.state) applyVersion(response, error.state);
     if (error instanceof ZodError) {
       logger.error('request.failed', {
         ...requestContext,

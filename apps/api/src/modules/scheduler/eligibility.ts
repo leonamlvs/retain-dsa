@@ -55,11 +55,10 @@ export function currentEligibility(
   evaluationTime: Date,
   positiveRequired = 2,
   historicalAdmissions: readonly EligibilityResult[] = [],
-  legacyInitialAdmission = false,
 ): EligibilityResult | null {
   const official = [...new Set(officialDifficulties)].sort((a, b) => order(a) - order(b));
   if (!official.length) return null;
-  let current: Difficulty = attempts.length && !legacyInitialAdmission ? 'Easy' : official[0]!;
+  let current: Difficulty = attempts.length ? 'Easy' : official[0]!;
   let admission: EligibilityResult['admission'] =
     order(current) === 0
       ? { kind: 'BASE_DIFFICULTY' }
@@ -172,7 +171,6 @@ export function rankCandidates(
     diversity: 1,
     repetitionPenalty: 1,
   },
-  algorithmVersion: 'candidate-ranking-v1' | 'candidate-ranking-v2' = 'candidate-ranking-v2',
 ): RankedCandidate[] {
   const tier = (item: RankedCandidate) => {
     if (item.needReason === 'PROGRESSION' && item.officialPosition !== null && !item.seen) return 0;
@@ -187,10 +185,6 @@ export function rankCandidates(
       (a, b) =>
         tier(a) - tier(b) ||
         b.needScore - a.needScore ||
-        (algorithmVersion === 'candidate-ranking-v1'
-          ? (a.officialPosition ?? Number.MAX_SAFE_INTEGER) -
-            (b.officialPosition ?? Number.MAX_SAFE_INTEGER)
-          : 0) ||
         Number(b.seen === false) * weights.unseen +
           b.tagDiversity * weights.diversity -
           b.repetition * weights.repetitionPenalty -

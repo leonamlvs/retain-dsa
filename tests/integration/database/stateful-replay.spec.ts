@@ -78,14 +78,10 @@ async function projections() {
       orderBy: [{ skillId: 'asc' }, { difficulty: 'asc' }],
     }),
     cooldown: await client.userProblemState.findMany({ orderBy: { problemId: 'asc' } }),
-    queue: await client.recommendation.findMany({
-      select: { id: true, position: true, status: true },
-      orderBy: { id: 'asc' },
-    }),
   };
 }
 
-test('stateful operation prefixes rebuild equivalent projections from source alone', async () => {
+test('operation prefixes rebuild equivalent learning projections from retained attempts', async () => {
   await fc.assert(
     fc.asyncProperty(
       fc.array(fc.constantFrom('save', 'reset', 'catalog', 'config', 'discovery', 'absence'), {
@@ -163,15 +159,13 @@ test('stateful operation prefixes rebuild equivalent projections from source alo
           }
           await study.replenish();
           const expected = await projections();
-          const sourceCounts = [
-            await client.attempt.count(),
-            await client.decision.count(),
-            await client.recommendationEvent.count(),
-          ];
+          const attemptCount = await client.attempt.count();
+          const issuanceIds = (
+            await client.recommendation.findMany({ select: { id: true }, orderBy: { id: 'asc' } })
+          ).map((row) => row.id);
           const analytics = await study.analytics({ timezone: 'America/Sao_Paulo' });
           await client.skillMemoryState.deleteMany();
           await client.userProblemState.deleteMany();
-          await client.recommendation.updateMany({ data: { status: 'REPLACED', position: 999 } });
           const user = await client.localUser.findFirstOrThrow();
           await study.rebuildProjections({
             userId: user.id,
@@ -179,15 +173,11 @@ test('stateful operation prefixes rebuild equivalent projections from source alo
             cutoffSequence: user.sourceSequence,
           });
           expect(await projections()).toEqual(expected);
-          expect([
-            await client.attempt.count(),
-            await client.decision.count(),
-            await client.recommendationEvent.count(),
-          ]).toEqual(sourceCounts);
-          expect(await study.analytics({ timezone: 'America/Sao_Paulo' })).toEqual({
-            ...analytics,
-            stateRevision: (await study.session()).stateRevision,
-          });
+          expect(await client.attempt.count()).toBe(attemptCount);
+          expect(await client.recommendation.count({ where: { id: { in: issuanceIds } } })).toBe(
+            issuanceIds.length,
+          );
+          expect(await study.analytics({ timezone: 'America/Sao_Paulo' })).toEqual(analytics);
           const queue = await study.recommendations();
           expect(new Set(queue.items.map((item) => item.providerProblemId)).size).toBe(
             queue.items.length,
@@ -202,7 +192,7 @@ test('stateful operation prefixes rebuild equivalent projections from source alo
   );
 }, 120000);
 
-test('a concurrent revision change prevents staged projection publication', async () => {
+test('a concurrent internal revision change prevents staged reconstruction publication', async () => {
   const before = await projections();
   const write = transactions.write.bind(transactions);
   const spy = jest.spyOn(transactions, 'write').mockImplementationOnce(async (operation) => {
@@ -216,7 +206,7 @@ test('a concurrent revision change prevents staged projection publication', asyn
   });
   try {
     await expect(study.rebuildProjections()).rejects.toMatchObject({
-      code: 'REPLAY_PUBLICATION_CONFLICT',
+      code: 'RECONSTRUCTION_PUBLICATION_CONFLICT',
     });
   } finally {
     spy.mockRestore();

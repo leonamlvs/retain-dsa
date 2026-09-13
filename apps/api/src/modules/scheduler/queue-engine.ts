@@ -15,18 +15,7 @@ import type { Difficulty } from '../../domain/catalog.schema.js';
 
 const order = (difficulty: string) => ['Easy', 'Medium', 'Hard'].indexOf(difficulty);
 const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
-export function serializeQueueInput(input: QueueInput): unknown {
-  return JSON.parse(
-    JSON.stringify(input, (_key, value: unknown) =>
-      typeof value === 'bigint' ? value.toString() : value,
-    ),
-  );
-}
-export function evaluateQueue(
-  raw: unknown,
-  memory: MemoryEngine,
-  algorithmVersion: 'queue-engine-v3' | 'queue-engine-v4' = 'queue-engine-v4',
-) {
+export function evaluateQueue(raw: unknown, memory: MemoryEngine) {
   const input = queueInputSchema.parse(raw);
   const { config, evaluatedAt: now, configurations } = input;
   const attempts = [...input.attempts].sort((a, b) =>
@@ -97,7 +86,6 @@ export function evaluateQueue(
       skill.id,
       resolvePracticeNeed({
         historicalAdmissions: admissions,
-        legacyQueueV3: algorithmVersion === 'queue-engine-v3',
         officialDifficulties: input.items
           .filter((item) => item.skillId === skill.id)
           .map((item) => item.problem.difficulty),
@@ -283,7 +271,6 @@ export function evaluateQueue(
   const uniqueProblems = new Set<string>();
   const selectionInput = ranked
     .filter((candidate) => {
-      if (algorithmVersion === 'queue-engine-v3') return true;
       if (uniqueProblems.has(candidate.catalogProblemId)) return false;
       uniqueProblems.add(candidate.catalogProblemId);
       return true;

@@ -1,5 +1,4 @@
 export class DomainError extends Error {
-  public state?: { generation: string; stateRevision: string };
   constructor(
     public readonly code: string,
     message: string,

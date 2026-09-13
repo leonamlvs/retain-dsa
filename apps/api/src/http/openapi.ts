@@ -17,25 +17,19 @@ import {
   recommendationDetailSchema,
   recommendationsResponseSchema,
   resetProgressSchema,
+  resetProgressResponseSchema,
   skillsResponseSchema,
   sessionResponseSchema,
 } from '../modules/study/study.schema.js';
 extendZodWithOpenApi(z);
 export function openApiDocument() {
   const registry = new OpenAPIRegistry();
-  const versionHeaders = {
-    'X-Progress-Generation': { schema: { type: 'string', format: 'uuid' } },
-    'X-State-Revision': { schema: { type: 'string', pattern: '^\\d+$' } },
-  } as const;
   const error = {
-    description:
-      'Application error. Snapshot version headers are present only when the originating operation captured them.',
-    headers: versionHeaders,
+    description: 'Application error.',
     content: { 'application/json': { schema: errorResponseSchema } },
   };
   const json = (description: string, schema: z.ZodType) => ({
     description,
-    headers: versionHeaders,
     content: { 'application/json': { schema } },
   });
   const analyticsRequest = { query: analyticsQuerySchema };
@@ -43,9 +37,9 @@ export function openApiDocument() {
     method: 'get',
     path: '/api/v1/session',
     operationId: 'getSession',
-    summary: 'Authoritative uncached database identity and progress version',
+    summary: 'Current progress generation',
     responses: {
-      200: json('Consistent session snapshot; Cache-Control: no-store.', sessionResponseSchema),
+      200: json('Current progress generation; Cache-Control: no-store.', sessionResponseSchema),
       500: error,
     },
   });
@@ -160,7 +154,7 @@ export function openApiDocument() {
     operationId: 'resetProgress',
     request: { body: { content: { 'application/json': { schema: resetProgressSchema } } } },
     responses: {
-      204: { description: 'Progress reset.', headers: versionHeaders },
+      200: json('Progress reset.', resetProgressResponseSchema),
       400: error,
       409: error,
       503: error,

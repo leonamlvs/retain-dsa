@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { currentResponseState } from '../services/state-guard.js';
 
 const storageKey = 'retain-dsa.timer.v1';
 export interface TimerState {
@@ -8,7 +7,6 @@ export interface TimerState {
   status: 'RUNNING' | 'PAUSED';
   startedAt: number | null;
   accumulatedSeconds: number;
-  databaseId?: string;
 }
 
 function readTimer(fallback: TimerState | null = null): TimerState | null {
@@ -37,23 +35,20 @@ function readTimer(fallback: TimerState | null = null): TimerState | null {
   }
 }
 
-export function reconcileTimerStorage(state: { databaseId?: string; generation: string }): void {
-  const timer = readTimer();
-  if (
-    timer &&
-    (timer.generation !== state.generation ||
-      (timer.databaseId && timer.databaseId !== state.databaseId))
-  ) {
-    try {
-      localStorage.removeItem(storageKey);
-    } catch {
-      /* Storage is advisory. */
-    }
+export function clearTimerStorage(): void {
+  try {
+    localStorage.removeItem(storageKey);
+  } catch {
+    /* Storage is advisory. */
   }
 }
 
+export function reconcileTimerStorage(generation: string): void {
+  const timer = readTimer();
+  if (timer && timer.generation !== generation) clearTimerStorage();
+}
+
 export function useTimer(generation: string | undefined) {
-  const databaseId = currentResponseState()?.databaseId;
   const [timer, setTimer] = useState<TimerState | null>(() => readTimer());
   const [, tick] = useState(0);
   const persist = useCallback((next: TimerState | null) => {
@@ -66,14 +61,8 @@ export function useTimer(generation: string | undefined) {
     }
   }, []);
   useEffect(() => {
-    if (
-      timer &&
-      generation &&
-      (timer.generation !== generation ||
-        (timer.databaseId && databaseId && timer.databaseId !== databaseId))
-    )
-      persist(null);
-  }, [databaseId, generation, persist, timer]);
+    if (timer && generation && timer.generation !== generation) persist(null);
+  }, [generation, persist, timer]);
   useEffect(() => {
     if (timer?.status !== 'RUNNING') return;
     const id = window.setInterval(() => tick((value) => value + 1), 1000);
@@ -98,40 +87,47 @@ export function useTimer(generation: string | undefined) {
     timer,
     elapsed,
     start: (recommendationId: string) => {
+      if (!generation) return false;
       const latest = readTimer(timer);
       if (
-        !generation ||
-        currentResponseState()?.generation !== generation ||
-        currentResponseState()?.databaseId !== databaseId ||
-        (latest && latest.generation === generation && latest.recommendationId !== recommendationId)
+        latest &&
+        latest.generation === generation &&
+        latest.recommendationId !== recommendationId
       )
         return false;
       persist({
         recommendationId,
         generation,
-        ...(currentResponseState()?.databaseId
-          ? { databaseId: currentResponseState()!.databaseId! }
-          : {}),
         status: 'RUNNING',
         startedAt: Date.now(),
-        accumulatedSeconds: latest?.generation === generation ? latest.accumulatedSeconds : 0,
+        accumulatedSeconds:
+          latest?.generation === generation && latest.recommendationId === recommendationId
+            ? latest.accumulatedSeconds
+            : 0,
       });
       return true;
     },
-    pause: () =>
-      timer &&
-      persist({ ...timer, status: 'PAUSED', accumulatedSeconds: elapsed, startedAt: null }),
-    reset: () =>
-      timer && persist({ ...timer, status: 'PAUSED', accumulatedSeconds: 0, startedAt: null }),
-    clearMatching: (recommendationId: string, expectedGeneration: string) => {
+    pause: () => {
       const latest = readTimer(timer);
       if (
-        latest?.recommendationId === recommendationId &&
-        latest.generation === expectedGeneration &&
-        (!latest.databaseId || latest.databaseId === databaseId) &&
-        currentResponseState()?.databaseId === databaseId &&
-        currentResponseState()?.generation === expectedGeneration
+        timer &&
+        latest?.recommendationId === timer.recommendationId &&
+        latest.generation === timer.generation
       )
+        persist({ ...latest, status: 'PAUSED', accumulatedSeconds: elapsed, startedAt: null });
+    },
+    clear: () => {
+      const latest = readTimer(timer);
+      if (
+        timer &&
+        latest?.recommendationId === timer.recommendationId &&
+        latest.generation === timer.generation
+      )
+        persist(null);
+    },
+    clearMatching: (recommendationId: string, expectedGeneration: string) => {
+      const latest = readTimer(timer);
+      if (latest?.recommendationId === recommendationId && latest.generation === expectedGeneration)
         persist(null);
     },
   };

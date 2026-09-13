@@ -26,7 +26,7 @@ export class PrismaTransactions implements TransactionRunner<DatabaseScope, Data
             'DATABASE_NOT_INITIALIZED',
             'The application state root is missing.',
           );
-        return this.withFailureSnapshot(db, operation);
+        return operation({ db });
       },
       {
         isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
@@ -39,27 +39,9 @@ export class PrismaTransactions implements TransactionRunner<DatabaseScope, Data
     return this.client.$transaction(
       async (db) => {
         await db.$executeRawUnsafe('SET TRANSACTION READ ONLY');
-        return this.withFailureSnapshot(db, operation);
+        return operation({ db });
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, timeout: 15000 },
     );
-  }
-
-  private async withFailureSnapshot<T>(
-    db: Prisma.TransactionClient,
-    operation: (scope: DatabaseScope) => Promise<T>,
-  ): Promise<T> {
-    const user = await db.localUser.findFirst({ where: { singleton: 1 } });
-    const state = await db.applicationState.findUnique({ where: { id: 1 } });
-    try {
-      return await operation({ db });
-    } catch (error) {
-      if (error instanceof DomainError && user && state && !error.state)
-        error.state = {
-          generation: user.generation,
-          stateRevision: state.stateRevision.toString(),
-        };
-      throw error;
-    }
   }
 }

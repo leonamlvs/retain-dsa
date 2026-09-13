@@ -159,7 +159,6 @@ export class MaintenanceCoordinator {
 export interface MaintenanceStudyService {
   claimMaintenance?(operationId: string, configVersion: string): Promise<boolean>;
   releaseMaintenance?(operationId: string): Promise<void>;
-  rebuildProjections(): Promise<void>;
   activeConfiguration?(): Promise<StudyConfig>;
   discoveryNeeds(configVersion?: string): Promise<DiscoveryNeed[]>;
   currentCatalogRevision(): Promise<bigint>;

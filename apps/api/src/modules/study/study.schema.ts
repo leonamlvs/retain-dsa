@@ -4,12 +4,9 @@ import { feedbackSchema } from '../feedback/feedback.schema.js';
 import { assertLocalDate, dateRange, localDateAt } from '../../domain/calendar.js';
 
 export const generationSchema = z.string().uuid();
-export const revisionSchema = z.string().regex(/^\d+$/);
 
 export const sessionResponseSchema = z.object({
-  databaseId: z.string().uuid(),
   generation: generationSchema,
-  stateRevision: revisionSchema,
 });
 
 export const recommendationSchema = z.object({
@@ -31,12 +28,10 @@ export const recommendationSchema = z.object({
 
 export const recommendationDetailSchema = recommendationSchema.extend({
   generation: generationSchema,
-  stateRevision: revisionSchema,
 });
 
 export const recommendationsResponseSchema = z.object({
   generation: generationSchema,
-  stateRevision: revisionSchema,
   items: z.array(recommendationSchema),
   refill: z.object({
     status: z.enum(['READY', 'REFILLING', 'SHORTAGE']),
@@ -46,7 +41,6 @@ export const recommendationsResponseSchema = z.object({
 
 export const curriculumResponseSchema = z.object({
   generation: generationSchema,
-  stateRevision: revisionSchema,
   name: z.string(),
   progressPercentage: z.number().min(0).max(100).nullable(),
   completedAnchors: z.number().int().nonnegative(),
@@ -98,7 +92,6 @@ export const analyticsQuerySchema = z
   });
 export const analyticsResponseSchema = z.object({
   generation: generationSchema,
-  stateRevision: revisionSchema,
   uniqueProblems: z.number().int().nonnegative(),
   totalAttempts: z.number().int().nonnegative(),
   currentStreak: z.number().int().nonnegative(),
@@ -123,18 +116,15 @@ export const analyticsResponseSchema = z.object({
 });
 export const heatmapResponseSchema = analyticsResponseSchema.pick({
   generation: true,
-  stateRevision: true,
   heatmap: true,
 });
 export const skillsResponseSchema = analyticsResponseSchema.pick({
   generation: true,
-  stateRevision: true,
   bySkill: true,
   byDifficulty: true,
 });
 export const evolutionResponseSchema = analyticsResponseSchema.pick({
   generation: true,
-  stateRevision: true,
   evolution: true,
 });
 
@@ -151,7 +141,6 @@ export const createAttemptSchema = z
 
 export const attemptResponseSchema = z.object({
   generation: generationSchema,
-  stateRevision: revisionSchema,
   attempt: z.object({
     id: z.string().uuid(),
     recommendationId: z.string().uuid(),
@@ -166,6 +155,8 @@ export const attemptResponseSchema = z.object({
 export const resetProgressSchema = z
   .object({ confirmation: z.literal('RESET'), generation: generationSchema })
   .strict();
+
+export const resetProgressResponseSchema = z.object({ generation: generationSchema });
 
 export const errorResponseSchema = z.object({
   error: z.object({

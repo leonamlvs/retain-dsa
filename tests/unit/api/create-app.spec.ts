@@ -6,11 +6,9 @@ import { NoOpLogger } from '../../../apps/api/src/shared/observability/logger.in
 import { DomainError } from '../../../apps/api/src/domain/domain-error.js';
 
 const generation = '11111111-1111-4111-8111-111111111111';
-const stateRevision = '7';
-test('error headers use the failure snapshot without a later curriculum read', async () => {
+test('errors do not expose internal revision state or trigger a later curriculum read', async () => {
   const study = service();
   const failure = new DomainError('CLOCK_REGRESSION', 'Clock moved backwards.');
-  failure.state = { generation, stateRevision: '3' };
   study.recommendations = async () => {
     throw failure;
   };
@@ -18,16 +16,16 @@ test('error headers use the failure snapshot without a later curriculum read', a
   const response = await request(createApp(study, new NoOpLogger()))
     .get('/api/v1/recommendations')
     .expect(503);
-  expect(response.headers['x-state-revision']).toBe('3');
+  expect(response.headers['x-state-revision']).toBeUndefined();
+  expect(response.headers['x-progress-generation']).toBeUndefined();
   expect(study.curriculum).not.toHaveBeenCalled();
 });
 function service(status: 200 | 201 = 201): StudyService {
   return {
-    session: async () => ({ databaseId: generation, generation, stateRevision }),
+    session: async () => ({ generation }),
     health: async () => 'up',
     curriculum: async () => ({
       generation,
-      stateRevision,
       name: 'LeetCode 75',
       progressPercentage: 20,
       completedAnchors: 15,
@@ -35,7 +33,6 @@ function service(status: 200 | 201 = 201): StudyService {
     }),
     recommendations: async () => ({
       generation,
-      stateRevision,
       items: [],
       refill: { status: 'SHORTAGE', reason: 'NO_ELIGIBLE_CANDIDATE' },
     }),
@@ -44,7 +41,6 @@ function service(status: 200 | 201 = 201): StudyService {
       status,
       body: {
         generation,
-        stateRevision: '8',
         attempt: {
           id: '22222222-2222-4222-8222-222222222222',
           recommendationId: input.recommendationId,
@@ -58,7 +54,6 @@ function service(status: 200 | 201 = 201): StudyService {
     }),
     analytics: async () => ({
       generation,
-      stateRevision,
       uniqueProblems: 0,
       totalAttempts: 0,
       currentStreak: 0,
@@ -70,27 +65,38 @@ function service(status: 200 | 201 = 201): StudyService {
       feedback: { independence: [], recognition: [], implementation: [], complexity: [] },
       evolution: [],
     }),
-    reset: async () => ({ generation: '33333333-3333-4333-8333-333333333333', stateRevision: '8' }),
+    reset: async () => ({ generation: '33333333-3333-4333-8333-333333333333' }),
   };
 }
 
-test('serves an uncached authoritative session with matching snapshot headers', async () => {
+test('serves an uncached generation-only session', async () => {
   const response = await request(createApp(service(), new NoOpLogger()))
     .get('/api/v1/session')
     .expect(200);
-  expect(response.body).toEqual({ databaseId: generation, generation, stateRevision });
+  expect(response.body).toEqual({ generation });
   expect(response.headers['cache-control']).toBe('no-store');
-  expect(response.headers['x-state-revision']).toBe(response.body.stateRevision);
+  expect(response.headers['x-state-revision']).toBeUndefined();
+  expect(response.headers['x-progress-generation']).toBeUndefined();
 });
 
-test('serves versioned state with matching response headers', async () => {
+test('serves generation-scoped state without snapshot headers', async () => {
   const response = await request(createApp(service(), new NoOpLogger()))
     .get('/api/v1/curriculum')
     .expect(200);
-  expect(response.headers['x-progress-generation']).toBe(generation);
-  expect(response.headers['x-state-revision']).toBe(stateRevision);
+  expect(response.body.generation).toBe(generation);
+  expect(response.headers['x-progress-generation']).toBeUndefined();
+  expect(response.headers['x-state-revision']).toBeUndefined();
   expect(response.body.progressPercentage).toBe(20);
   expect(response.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/);
+});
+
+test('returns the new generation as JSON after reset', async () => {
+  const response = await request(createApp(service(), new NoOpLogger()))
+    .delete('/api/v1/progress')
+    .send({ confirmation: 'RESET', generation })
+    .expect(200);
+  expect(response.body).toEqual({ generation: '33333333-3333-4333-8333-333333333333' });
+  expect(response.headers['x-state-revision']).toBeUndefined();
 });
 
 test('validates analytics timezone and bounded date ranges', async () => {

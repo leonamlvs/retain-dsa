@@ -82,7 +82,6 @@ export function resolvePracticeNeed(input: {
   memory: MemoryEngine;
   positiveRequired?: number;
   historicalAdmissions?: readonly EligibilityResult[];
-  legacyQueueV3?: boolean;
 }): PracticeNeed | null {
   const eligibility = currentEligibility(
     input.officialDifficulties,
@@ -91,13 +90,12 @@ export function resolvePracticeNeed(input: {
     input.evaluationTime,
     input.positiveRequired,
     input.historicalAdmissions,
-    input.legacyQueueV3,
   );
   if (!eligibility) return null;
   // An unattempted promoted tier still depends on the freshness of its lower evidence.
   const evidenceMemory =
     input.memories.find((item) => item.difficulty === eligibility.difficulty) ??
-    (input.legacyQueueV3 ? [] : [...input.memories])
+    [...input.memories]
       .filter(
         (item) =>
           difficultyOrder.indexOf(item.difficulty) <

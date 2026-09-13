@@ -1,14 +1,14 @@
-import { evaluateQueue, serializeQueueInput } from '../../modules/scheduler/queue-engine.js';
+import { evaluateQueue } from '../../modules/scheduler/queue-engine.js';
 import { discoveryFingerprint } from '../../modules/discovery/discovery-fingerprint.js';
 import { randomUUID } from 'node:crypto';
 import { canonical, hash } from '../../domain/canonical.js';
 import type { Prisma, PrismaClient } from '../../generated/prisma/client.js';
 import { studyConfigSchema } from '../../config/study-config.schema.js';
 import {
-  replayStudySources,
-  replayRequestSchema,
-  type ReplayRequest,
-} from '../../modules/study/replay.js';
+  reconstructLearningState,
+  reconstructionRequestSchema,
+  type ReconstructionRequest,
+} from '../../modules/study/reconstruction.js';
 import { localDateAt } from '../../domain/calendar.js';
 import { computeAnalytics } from '../../modules/study/analytics.js';
 import type { Clock } from '../../domain/clock.interface.js';
@@ -31,11 +31,7 @@ import { resolvePracticeNeed } from '../../modules/scheduler/practice-need.js';
 import type { MemoryState } from '../../modules/memory/memory-engine.interface.js';
 import type { MemoryEngine } from '../../modules/memory/memory-engine.interface.js';
 import { cooldownUntil } from '../../modules/memory/cooldown.js';
-import type {
-  AttemptResult,
-  StudyService,
-  VersionedState,
-} from '../../modules/study/study-service.interface.js';
+import type { AttemptResult, StudyService } from '../../modules/study/study-service.interface.js';
 import type { Logger } from '../../shared/observability/logger.interface.js';
 import type { DiscoveryPage } from '../../modules/discovery/problem-provider.interface.js';
 import type { DiscoveryNeed } from '../../modules/discovery/discovery-need.interface.js';
@@ -64,12 +60,7 @@ async function loadConfiguration(db: Prisma.TransactionClient, version: string) 
   return studyConfigSchema.parse(row.parameters);
 }
 
-function stateHeaders(
-  user: { generation: string },
-  state: { stateRevision: bigint },
-): VersionedState {
-  return { generation: user.generation, stateRevision: state.stateRevision.toString() };
-}
+const progressScope = (user: { generation: string }) => ({ generation: user.generation });
 
 export class PrismaStudyService implements StudyService {
   constructor(
@@ -83,8 +74,7 @@ export class PrismaStudyService implements StudyService {
   async session() {
     return this.transactions.read(async ({ db }) => {
       const user = await db.localUser.findFirstOrThrow({ where: { singleton: 1 } });
-      const state = await db.applicationState.findUniqueOrThrow({ where: { id: 1 } });
-      return { databaseId: user.id, ...stateHeaders(user, state) };
+      return progressScope(user);
     });
   }
 
@@ -99,9 +89,8 @@ export class PrismaStudyService implements StudyService {
 
   async curriculum() {
     return this.transactions.read(async ({ db }) => {
-      const [user, state, curriculum] = [
+      const [user, curriculum] = [
         await db.localUser.findFirstOrThrow({ where: { singleton: 1 } }),
-        await db.applicationState.findUniqueOrThrow({ where: { id: 1 } }),
         await db.curriculum.findFirst({ orderBy: { lastSyncedAt: 'desc' } }),
       ];
       const [anchors, completedAnchors] = [
@@ -131,7 +120,7 @@ export class PrismaStudyService implements StudyService {
       const total = anchors.length;
       const completed = completedAnchors.length;
       return {
-        ...stateHeaders(user, state),
+        ...progressScope(user),
         name: curriculum?.name ?? 'LeetCode 75',
         progressPercentage: total === 0 ? null : Math.round((completed / total) * 100),
         completedAnchors: completed,
@@ -160,7 +149,7 @@ export class PrismaStudyService implements StudyService {
         },
       });
       return {
-        ...stateHeaders(user, state),
+        ...progressScope(user),
         items: rows.map((row) => ({
           ...snapshotType(row.issuanceSnapshot),
           status: 'ACTIVE' as const,
@@ -182,16 +171,13 @@ export class PrismaStudyService implements StudyService {
 
   async recommendation(id: string) {
     return this.transactions.read(async ({ db }) => {
-      const [user, state] = [
-        await db.localUser.findFirstOrThrow({ where: { singleton: 1 } }),
-        await db.applicationState.findUniqueOrThrow({ where: { id: 1 } }),
-      ];
+      const user = await db.localUser.findFirstOrThrow({ where: { singleton: 1 } });
       const row = await db.recommendation.findUnique({ where: { id }, include: { attempt: true } });
       if (!row || row.userId !== user.id || row.generation !== user.generation)
         throw new DomainError('RECOMMENDATION_NOT_FOUND', 'Recommendation not found.');
       return {
         ...snapshotType(row.issuanceSnapshot),
-        ...stateHeaders(user, state),
+        ...progressScope(user),
         status: row.status as RecommendationResponse['status'],
         recordable: !row.attempt,
       };
@@ -416,7 +402,7 @@ export class PrismaStudyService implements StudyService {
     return {
       status: result.status,
       body: {
-        ...stateHeaders(result.user, result.state),
+        ...progressScope(result.user),
         attempt: {
           id: result.attempt.id,
           recommendationId: result.attempt.recommendationId,
@@ -432,17 +418,14 @@ export class PrismaStudyService implements StudyService {
 
   async analytics(query: { timezone: string; from?: string; to?: string }) {
     return this.transactions.read(async ({ db }) => {
-      const [user, state] = [
-        await db.localUser.findFirstOrThrow({ where: { singleton: 1 } }),
-        await db.applicationState.findUniqueOrThrow({ where: { id: 1 } }),
-      ];
+      const user = await db.localUser.findFirstOrThrow({ where: { singleton: 1 } });
       const attempts = await db.attempt.findMany({
         where: { userId: user.id, generation: user.generation },
         include: { feedback: true, skill: true },
         orderBy: [{ completedAt: 'asc' }, { sourceSequence: 'asc' }],
       });
       return {
-        ...stateHeaders(user, state),
+        ...progressScope(user),
         ...computeAnalytics(
           attempts.map((attempt) => ({
             ...attempt,
@@ -455,7 +438,7 @@ export class PrismaStudyService implements StudyService {
     });
   }
 
-  async reset(generation: string): Promise<VersionedState> {
+  async reset(generation: string) {
     const result = await this.transactions.write(async ({ db }) => {
       const user = await db.localUser.findFirstOrThrow({ where: { singleton: 1 } });
       if (user.generation !== generation)
@@ -479,7 +462,7 @@ export class PrismaStudyService implements StudyService {
         where: { id: user.id },
         data: { generation: randomUUID(), sourceSequence: 0n, lastResetAt: now },
       });
-      const updatedState = await db.applicationState.update({
+      await db.applicationState.update({
         where: { id: 1 },
         data: { stateRevision: { increment: 1n }, lastBusinessAt: now },
       });
@@ -495,7 +478,7 @@ export class PrismaStudyService implements StudyService {
           details: {},
         },
       });
-      return stateHeaders(updatedUser, updatedState);
+      return progressScope(updatedUser);
     });
     this.logger.event('progress.reset', { generation: result.generation });
     return result;
@@ -1140,11 +1123,11 @@ export class PrismaStudyService implements StudyService {
     });
   }
 
-  async rebuildProjections(request?: ReplayRequest): Promise<void> {
+  async rebuildProjections(request?: ReconstructionRequest): Promise<void> {
     const captured = await this.transactions.read(async ({ db }) => {
       const user = await db.localUser.findFirstOrThrow({ where: { singleton: 1 } });
       const state = await db.applicationState.findUniqueOrThrow({ where: { id: 1 } });
-      const input = replayRequestSchema.parse(
+      const input = reconstructionRequestSchema.parse(
         request ?? {
           userId: user.id,
           evaluationTime: this.clock.now(),
@@ -1157,7 +1140,7 @@ export class PrismaStudyService implements StudyService {
         (state.lastBusinessAt && input.evaluationTime < state.lastBusinessAt)
       )
         throw new DomainError(
-          'REPLAY_PUBLICATION_CONFLICT',
+          'RECONSTRUCTION_PUBLICATION_CONFLICT',
           'Only the current source cutoff can replace live projections.',
         );
       const where = {
@@ -1170,34 +1153,20 @@ export class PrismaStudyService implements StudyService {
         include: { feedback: true },
         orderBy: { sourceSequence: 'asc' },
       });
-      const decisions = await db.decision.findMany({ where, orderBy: { sourceSequence: 'asc' } });
-      const events = await db.recommendationEvent.findMany({
-        where,
-        orderBy: { sourceSequence: 'asc' },
-      });
-      if (
-        attempts.some((row) => row.completedAt > input.evaluationTime) ||
-        decisions.some((row) => row.evaluatedAt > input.evaluationTime) ||
-        events.some((row) => row.at > input.evaluationTime)
-      )
+      if (attempts.some((row) => row.completedAt > input.evaluationTime))
         throw new DomainError(
-          'REPLAY_PUBLICATION_CONFLICT',
+          'RECONSTRUCTION_PUBLICATION_CONFLICT',
           'Evaluation time precedes retained source facts.',
         );
       const configurations = await db.configuration.findMany();
-      // Status and position are projections; they are deliberately absent from replay inputs.
-      const issuances = await db.recommendation.findMany({
-        where: { userId: user.id, generation: user.generation },
-        select: { id: true, decisionId: true },
-      });
       return {
         user,
         state,
         input,
-        sources: { attempts, decisions, events, configurations, issuances },
+        sources: { attempts, configurations },
       };
     });
-    const rebuilt = replayStudySources(captured.sources, this.memory);
+    const rebuilt = reconstructLearningState(captured.sources, this.memory);
     await this.transactions.write(async ({ db }) => {
       const user = await db.localUser.findFirstOrThrow({ where: { singleton: 1 } });
       const state = await db.applicationState.findUniqueOrThrow({ where: { id: 1 } });
@@ -1211,7 +1180,7 @@ export class PrismaStudyService implements StudyService {
         state.activeConfig !== captured.state.activeConfig
       )
         throw new DomainError(
-          'REPLAY_PUBLICATION_CONFLICT',
+          'RECONSTRUCTION_PUBLICATION_CONFLICT',
           'Source state changed during reconstruction.',
         );
       await db.skillMemoryState.deleteMany({ where: { userId: user.id } });
@@ -1229,17 +1198,6 @@ export class PrismaStudyService implements StudyService {
       }
       for (const [problemId, projection] of rebuilt.problemStates)
         await db.userProblemState.create({ data: { userId: user.id, problemId, ...projection } });
-      // Retain immutable issuance identities/snapshots and their foreign keys.
-      // Clear projected ACTIVE flags first so the partial unique index stays valid.
-      await db.recommendation.updateMany({
-        where: { userId: user.id, generation: user.generation },
-        data: { status: 'REPLACED' },
-      });
-      for (const projection of rebuilt.recommendations)
-        await db.recommendation.update({
-          where: { id: projection.id },
-          data: { status: projection.status, position: projection.position },
-        });
       await db.applicationState.update({
         where: { id: 1 },
         data: { stateRevision: { increment: 1n } },
@@ -1249,8 +1207,9 @@ export class PrismaStudyService implements StudyService {
       userId: captured.user.id,
       cutoffSequence: captured.input.cutoffSequence.toString(),
       evaluationTime: captured.input.evaluationTime.toISOString(),
-      projectionsReplaced: true,
+      learningProjectionsReplaced: true,
     });
+    await this.replenish();
   }
 
   async claimMaintenance(operationId: string, configVersion: string): Promise<boolean> {
@@ -1402,19 +1361,7 @@ export class PrismaStudyService implements StudyService {
         },
         this.memory,
       );
-      const {
-        eligible,
-        invalid,
-        replaced,
-        surviving,
-        needed,
-        rankingInput,
-        ranked,
-        selectedRanked,
-        candidates,
-        reasonBySkill,
-        preferProgression,
-      } = queue;
+      const { eligible, invalid, replaced, surviving, ranked, selectedRanked, candidates } = queue;
       const lifecycle: { event: string; recommendationId: string; reason: string }[] = [];
       let sequence = user.sourceSequence;
       for (const recommendation of invalid) {
@@ -1493,9 +1440,6 @@ export class PrismaStudyService implements StudyService {
         recommendation.position = position;
         reordered += 1;
       }
-      const rankingSnapshot = JSON.parse(JSON.stringify(rankingInput)) as Prisma.InputJsonValue;
-      const rankingHash = hash(rankingInput);
-      const rawInput = serializeQueueInput(queue.input) as Prisma.InputJsonValue;
       for (const [index, candidate] of candidates.entries()) {
         sequence += 1n;
         const decisionId = randomUUID();
@@ -1515,19 +1459,8 @@ export class PrismaStudyService implements StudyService {
           catalogRevision: appState.catalogRevision.toString(),
           configVersion: config.version,
           ranking: {
-            algorithmVersion: 'queue-engine-v4',
-            rawInput,
-            rawInputHash: hash(rawInput),
-            candidates: rankingSnapshot,
+            policyVersion: 'queue-engine-v4',
             candidateCount: ranked.length,
-            completePoolHash: rankingHash,
-            selection: {
-              count: needed,
-              progressionFraction: config.scheduler.progressionFraction,
-              preferProgression,
-              reasonBySkill,
-            },
-            selectionIndex: selectedRanked.findIndex((item) => item.problemId === candidate.key),
           },
         };
         await db.decision.create({

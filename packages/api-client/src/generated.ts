@@ -7,7 +7,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Authoritative uncached database identity and progress version */
+        /** Current progress generation */
         get: operations["getSession"];
         put?: never;
         post?: never;
@@ -199,28 +199,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Consistent session snapshot; Cache-Control: no-store. */
+            /** @description Current progress generation; Cache-Control: no-store. */
             200: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
                         /** Format: uuid */
-                        databaseId: string;
-                        /** Format: uuid */
                         generation: string;
-                        stateRevision: string;
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             500: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -294,15 +287,12 @@ export interface operations {
             /** @description Stored local-date activity. */
             200: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
                         /** Format: uuid */
                         generation: string;
-                        stateRevision: string;
                         heatmap: {
                             /** Format: date */
                             date: string;
@@ -311,11 +301,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             400: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -328,11 +316,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             500: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -363,15 +349,12 @@ export interface operations {
             /** @description Skill and difficulty distributions. */
             200: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
                         /** Format: uuid */
                         generation: string;
-                        stateRevision: string;
                         bySkill: {
                             key: string;
                             count: number;
@@ -383,11 +366,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             400: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -400,11 +381,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             500: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -435,15 +414,12 @@ export interface operations {
             /** @description Attempt evolution. */
             200: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
                         /** Format: uuid */
                         generation: string;
-                        stateRevision: string;
                         evolution: {
                             /** Format: date */
                             date: string;
@@ -453,11 +429,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             400: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -470,11 +444,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             500: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -501,15 +473,12 @@ export interface operations {
             /** @description Current curriculum progress. */
             200: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
                         /** Format: uuid */
                         generation: string;
-                        stateRevision: string;
                         name: string;
                         progressPercentage: number | null;
                         completedAnchors: number;
@@ -517,11 +486,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             400: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -534,11 +501,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             500: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -565,15 +530,12 @@ export interface operations {
             /** @description Persisted active recommendations. */
             200: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
                         /** Format: uuid */
                         generation: string;
-                        stateRevision: string;
                         items: {
                             /** Format: uuid */
                             id: string;
@@ -608,11 +570,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             500: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -641,8 +601,6 @@ export interface operations {
             /** @description Issued recommendation snapshot. */
             200: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -673,15 +631,12 @@ export interface operations {
                         recordable: boolean;
                         /** Format: uuid */
                         generation: string;
-                        stateRevision: string;
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             400: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -694,11 +649,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             404: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -711,11 +664,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             500: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -767,15 +718,12 @@ export interface operations {
             /** @description Idempotent replay. */
             200: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
                         /** Format: uuid */
                         generation: string;
-                        stateRevision: string;
                         attempt: {
                             /** Format: uuid */
                             id: string;
@@ -796,15 +744,12 @@ export interface operations {
             /** @description Attempt saved. */
             201: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
                         /** Format: uuid */
                         generation: string;
-                        stateRevision: string;
                         attempt: {
                             /** Format: uuid */
                             id: string;
@@ -822,11 +767,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             400: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -839,11 +782,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             404: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -856,11 +797,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             409: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -873,11 +812,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             500: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -890,11 +827,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             503: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -925,15 +860,12 @@ export interface operations {
             /** @description Attempt-based analytics. */
             200: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
                         /** Format: uuid */
                         generation: string;
-                        stateRevision: string;
                         uniqueProblems: number;
                         totalAttempts: number;
                         currentStreak: number;
@@ -979,11 +911,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             400: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -996,11 +926,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             500: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1034,19 +962,20 @@ export interface operations {
         };
         responses: {
             /** @description Progress reset. */
-            204: {
+            200: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        generation: string;
+                    };
+                };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             400: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1059,11 +988,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             409: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1076,11 +1003,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             500: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1093,11 +1018,9 @@ export interface operations {
                     };
                 };
             };
-            /** @description Application error. Snapshot version headers are present only when the originating operation captured them. */
+            /** @description Application error. */
             503: {
                 headers: {
-                    "X-Progress-Generation"?: string;
-                    "X-State-Revision"?: string;
                     [name: string]: unknown;
                 };
                 content: {

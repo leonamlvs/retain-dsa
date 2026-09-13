@@ -12,67 +12,29 @@
     "/api/v1/session": {
       "get": {
         "operationId": "getSession",
-        "summary": "Authoritative uncached database identity and progress version",
+        "summary": "Current progress generation",
         "responses": {
           "200": {
-            "description": "Consistent session snapshot; Cache-Control: no-store.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Current progress generation; Cache-Control: no-store.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "databaseId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
                     "generation": {
                       "type": "string",
                       "format": "uuid"
-                    },
-                    "stateRevision": {
-                      "type": "string",
-                      "pattern": "^\\d+$"
                     }
                   },
                   "required": [
-                    "databaseId",
-                    "generation",
-                    "stateRevision"
+                    "generation"
                   ]
                 }
               }
             }
           },
           "500": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -236,20 +198,6 @@
         "responses": {
           "200": {
             "description": "Stored local-date activity.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
             "content": {
               "application/json": {
                 "schema": {
@@ -258,10 +206,6 @@
                     "generation": {
                       "type": "string",
                       "format": "uuid"
-                    },
-                    "stateRevision": {
-                      "type": "string",
-                      "pattern": "^\\d+$"
                     },
                     "heatmap": {
                       "type": "array",
@@ -287,7 +231,6 @@
                   },
                   "required": [
                     "generation",
-                    "stateRevision",
                     "heatmap"
                   ]
                 }
@@ -295,21 +238,7 @@
             }
           },
           "400": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -345,21 +274,7 @@
             }
           },
           "500": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -431,20 +346,6 @@
         "responses": {
           "200": {
             "description": "Skill and difficulty distributions.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
             "content": {
               "application/json": {
                 "schema": {
@@ -453,10 +354,6 @@
                     "generation": {
                       "type": "string",
                       "format": "uuid"
-                    },
-                    "stateRevision": {
-                      "type": "string",
-                      "pattern": "^\\d+$"
                     },
                     "bySkill": {
                       "type": "array",
@@ -499,7 +396,6 @@
                   },
                   "required": [
                     "generation",
-                    "stateRevision",
                     "bySkill",
                     "byDifficulty"
                   ]
@@ -508,21 +404,7 @@
             }
           },
           "400": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -558,21 +440,7 @@
             }
           },
           "500": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -644,20 +512,6 @@
         "responses": {
           "200": {
             "description": "Attempt evolution.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
             "content": {
               "application/json": {
                 "schema": {
@@ -666,10 +520,6 @@
                     "generation": {
                       "type": "string",
                       "format": "uuid"
-                    },
-                    "stateRevision": {
-                      "type": "string",
-                      "pattern": "^\\d+$"
                     },
                     "evolution": {
                       "type": "array",
@@ -701,7 +551,6 @@
                   },
                   "required": [
                     "generation",
-                    "stateRevision",
                     "evolution"
                   ]
                 }
@@ -709,21 +558,7 @@
             }
           },
           "400": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -759,21 +594,7 @@
             }
           },
           "500": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -817,20 +638,6 @@
         "responses": {
           "200": {
             "description": "Current curriculum progress.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
             "content": {
               "application/json": {
                 "schema": {
@@ -839,10 +646,6 @@
                     "generation": {
                       "type": "string",
                       "format": "uuid"
-                    },
-                    "stateRevision": {
-                      "type": "string",
-                      "pattern": "^\\d+$"
                     },
                     "name": {
                       "type": "string"
@@ -864,7 +667,6 @@
                   },
                   "required": [
                     "generation",
-                    "stateRevision",
                     "name",
                     "progressPercentage",
                     "completedAnchors",
@@ -875,21 +677,7 @@
             }
           },
           "400": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -925,21 +713,7 @@
             }
           },
           "500": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -983,20 +757,6 @@
         "responses": {
           "200": {
             "description": "Persisted active recommendations.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
             "content": {
               "application/json": {
                 "schema": {
@@ -1005,10 +765,6 @@
                     "generation": {
                       "type": "string",
                       "format": "uuid"
-                    },
-                    "stateRevision": {
-                      "type": "string",
-                      "pattern": "^\\d+$"
                     },
                     "items": {
                       "type": "array",
@@ -1137,7 +893,6 @@
                   },
                   "required": [
                     "generation",
-                    "stateRevision",
                     "items",
                     "refill"
                   ]
@@ -1146,21 +901,7 @@
             }
           },
           "500": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1215,20 +956,6 @@
         "responses": {
           "200": {
             "description": "Issued recommendation snapshot.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
             "content": {
               "application/json": {
                 "schema": {
@@ -1316,10 +1043,6 @@
                     "generation": {
                       "type": "string",
                       "format": "uuid"
-                    },
-                    "stateRevision": {
-                      "type": "string",
-                      "pattern": "^\\d+$"
                     }
                   },
                   "required": [
@@ -1337,29 +1060,14 @@
                     "issuedAt",
                     "status",
                     "recordable",
-                    "generation",
-                    "stateRevision"
+                    "generation"
                   ]
                 }
               }
             }
           },
           "400": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1395,21 +1103,7 @@
             }
           },
           "404": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1445,21 +1139,7 @@
             }
           },
           "500": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1605,20 +1285,6 @@
         "responses": {
           "200": {
             "description": "Idempotent replay.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
             "content": {
               "application/json": {
                 "schema": {
@@ -1627,10 +1293,6 @@
                     "generation": {
                       "type": "string",
                       "format": "uuid"
-                    },
-                    "stateRevision": {
-                      "type": "string",
-                      "pattern": "^\\d+$"
                     },
                     "attempt": {
                       "type": "object",
@@ -1684,7 +1346,6 @@
                   },
                   "required": [
                     "generation",
-                    "stateRevision",
                     "attempt"
                   ]
                 }
@@ -1693,20 +1354,6 @@
           },
           "201": {
             "description": "Attempt saved.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
             "content": {
               "application/json": {
                 "schema": {
@@ -1715,10 +1362,6 @@
                     "generation": {
                       "type": "string",
                       "format": "uuid"
-                    },
-                    "stateRevision": {
-                      "type": "string",
-                      "pattern": "^\\d+$"
                     },
                     "attempt": {
                       "type": "object",
@@ -1772,7 +1415,6 @@
                   },
                   "required": [
                     "generation",
-                    "stateRevision",
                     "attempt"
                   ]
                 }
@@ -1780,21 +1422,7 @@
             }
           },
           "400": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1830,21 +1458,7 @@
             }
           },
           "404": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1880,21 +1494,7 @@
             }
           },
           "409": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1930,21 +1530,7 @@
             }
           },
           "500": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1980,21 +1566,7 @@
             }
           },
           "503": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2066,20 +1638,6 @@
         "responses": {
           "200": {
             "description": "Attempt-based analytics.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
             "content": {
               "application/json": {
                 "schema": {
@@ -2088,10 +1646,6 @@
                     "generation": {
                       "type": "string",
                       "format": "uuid"
-                    },
-                    "stateRevision": {
-                      "type": "string",
-                      "pattern": "^\\d+$"
                     },
                     "uniqueProblems": {
                       "type": "integer",
@@ -2290,7 +1844,6 @@
                   },
                   "required": [
                     "generation",
-                    "stateRevision",
                     "uniqueProblems",
                     "totalAttempts",
                     "currentStreak",
@@ -2307,21 +1860,7 @@
             }
           },
           "400": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2357,21 +1896,7 @@
             }
           },
           "500": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2439,39 +1964,27 @@
           }
         },
         "responses": {
-          "204": {
+          "200": {
             "description": "Progress reset.",
-            "headers": {
-              "X-Progress-Generation": {
+            "content": {
+              "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
+                  "type": "object",
+                  "properties": {
+                    "generation": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "generation"
+                  ]
                 }
               }
             }
           },
           "400": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2507,21 +2020,7 @@
             }
           },
           "409": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2557,21 +2056,7 @@
             }
           },
           "500": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2607,21 +2092,7 @@
             }
           },
           "503": {
-            "description": "Application error. Snapshot version headers are present only when the originating operation captured them.",
-            "headers": {
-              "X-Progress-Generation": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              },
-              "X-State-Revision": {
-                "schema": {
-                  "type": "string",
-                  "pattern": "^\\d+$"
-                }
-              }
-            },
+            "description": "Application error.",
             "content": {
               "application/json": {
                 "schema": {
