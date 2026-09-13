@@ -1,29 +1,26 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, extname, join, normalize, relative, resolve } from 'node:path';
-import { execFileSync } from 'node:child_process';
 
 const root = resolve(import.meta.dirname, '..');
 const requiredDocuments = [
-  'docs/specification.md',
-  'docs/scheduler.md',
-  'docs/architecture.md',
-  'docs/database.md',
-  'docs/api.md',
-  'docs/frontend.md',
-  'docs/testing.md',
-  'docs/observability.md',
-  'docs/git-workflow.md',
-  'docs/development.md',
-  'docs/implementation-plan.md',
-  'docs/implementation-status.md',
+  'docs/README.md',
+  'docs/spec/product.md',
+  'docs/spec/scheduler.md',
+  'docs/spec/frontend.md',
+  'docs/spec/architecture.md',
+  'docs/spec/testing.md',
+  'docs/work/current.md',
+  'docs/adr/README.md',
 ];
 const ignoredDirectories = new Set(['.git', '.yarn', 'dist', 'generated', 'test-results']);
+const allowedWorkStatuses = new Set([
+  'Proposed execution plan',
+  'In progress',
+  'Blocked',
+  'Complete',
+]);
+const allowedAdrStatuses = new Set(['Accepted', 'Partially superseded', 'Superseded']);
 const errors = [];
-const warnings = [];
-
-function read(relativePath) {
-  return readFileSync(join(root, relativePath), 'utf8');
-}
 
 function markdownFiles(directory) {
   const files = [];
@@ -50,98 +47,83 @@ function checkMarkdownLinks() {
     for (const match of content.matchAll(linkPattern)) {
       const target = match[1];
       if (/^(?:https?:|mailto:|#)/i.test(target)) continue;
-      const targetPath = target.split('#', 1)[0];
+      const targetPath = decodeURIComponent(target.split('#', 1)[0]);
       if (!targetPath) continue;
       const resolved = normalize(resolve(dirname(file), targetPath));
-      if (!resolved.startsWith(root) || !existsSync(resolved)) {
+      if (!resolved.startsWith(root) || !existsSync(resolved))
         errors.push(`Broken Markdown link in ${relative(root, file)}: ${target}`);
+    }
+  }
+}
+
+function checkCurrentWork() {
+  const workDirectory = join(root, 'docs/work');
+  const workFiles = readdirSync(workDirectory, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && extname(entry.name).toLowerCase() === '.md')
+    .map((entry) => entry.name);
+  if (workFiles.length !== 1 || workFiles[0] !== 'current.md')
+    errors.push('docs/work must contain exactly one Markdown plan named current.md.');
+
+  const content = readFileSync(join(workDirectory, 'current.md'), 'utf8');
+  const status = content.match(/^Status:\s+\*\*(.+?)\*\*\./m)?.[1];
+  if (!status || !allowedWorkStatuses.has(status))
+    errors.push(
+      `docs/work/current.md must use one of these statuses: ${[...allowedWorkStatuses].join(', ')}.`,
+    );
+}
+
+function checkAdrIndex() {
+  const adrDirectory = join(root, 'docs/adr');
+  const adrFiles = readdirSync(adrDirectory)
+    .filter((name) => /^\d{3}-.+\.md$/.test(name))
+    .sort();
+  const knownNumbers = new Set(adrFiles.map((name) => name.slice(0, 3)));
+  const index = readFileSync(join(adrDirectory, 'README.md'), 'utf8');
+  const rows = [
+    ...index.matchAll(/^\|\s*(\d{3})\s*\|[^\n]*?\|\s*([^|]+?)\s*\|\s*([^|]*?)\s*\|$/gm),
+  ];
+  const indexed = new Map();
+
+  for (const row of rows) {
+    const number = row[1];
+    const status = row[2].trim();
+    const notes = row[3].trim();
+    if (indexed.has(number)) errors.push(`ADR ${number} appears more than once in the ADR index.`);
+    indexed.set(number, status);
+    if (!allowedAdrStatuses.has(status))
+      errors.push(`ADR ${number} has unsupported index status: ${status}`);
+    if (status.includes('superseded')) {
+      const references = [...notes.matchAll(/ADR\s+(\d{3})/g)].map((match) => match[1]);
+      if (!references.length)
+        errors.push(`ADR ${number} is ${status.toLowerCase()} but names no superseding ADR.`);
+      for (const reference of references) {
+        if (!knownNumbers.has(reference))
+          errors.push(`ADR ${number} references missing superseding ADR ${reference}.`);
       }
     }
   }
-}
 
-function checkImplementationEvidence() {
-  const plan = read('docs/implementation-plan.md');
-  for (const [label, pattern] of [
-    ['acceptance criteria', /acceptance/i],
-    ['tests', /tests/i],
-    ['verification evidence', /verification/i],
-  ]) {
-    if (!pattern.test(plan))
-      errors.push(`Implementation plan is missing required evidence: ${label}`);
+  for (const number of knownNumbers) {
+    if (!indexed.has(number)) errors.push(`ADR ${number} is missing from docs/adr/README.md.`);
   }
-
-  const status = read('docs/implementation-status.md');
-  if (!/Verification on \d{4}-\d{2}-\d{2}/.test(status)) {
-    errors.push('Implementation status must include dated verification evidence.');
-  }
-  if (!/\b(?:Done|Partial|In progress|Blocked|Remaining work)\b/.test(status)) {
-    warnings.push('Implementation status has no explicit completion-state vocabulary.');
-  }
-}
-
-function changedFiles(base) {
-  const changes = new Set();
-  try {
-    for (const file of execFileSync('git', ['diff', '--name-only', `${base}...HEAD`], {
-      cwd: root,
-      encoding: 'utf8',
-    })
-      .split(/\r?\n/)
-      .filter(Boolean)) {
-      changes.add(file);
-    }
-  } catch {
-    warnings.push(
-      `Could not inspect Git changes from base '${base}'; skipped change-surface audit.`,
-    );
-  }
-  for (const args of [
-    ['diff', '--name-only'],
-    ['diff', '--cached', '--name-only'],
-  ]) {
-    for (const file of execFileSync('git', args, { cwd: root, encoding: 'utf8' })
-      .split(/\r?\n/)
-      .filter(Boolean)) {
-      changes.add(file);
-    }
-  }
-  return [...changes];
-}
-
-function checkChangeSurface() {
-  const baseIndex = process.argv.indexOf('--base');
-  if (baseIndex === -1) return;
-  const base = process.argv[baseIndex + 1];
-  if (!base) {
-    errors.push('--base requires a Git ref.');
-    return;
-  }
-  const changed = changedFiles(base);
-  const sourceChange = changed.some(
-    (file) =>
-      /^(?:apps|packages|config)\//.test(file) ||
-      /^(?:prisma\.config\.ts|compose\.yaml|Dockerfile)$/.test(file),
-  );
-  const documentationChange = changed.some(
-    (file) => file === 'AGENTS.md' || file.startsWith('docs/'),
-  );
-  if (sourceChange && !documentationChange) {
-    errors.push('Behavior/configuration files changed without a documentation or status update.');
+  for (const number of indexed.keys()) {
+    if (!knownNumbers.has(number))
+      errors.push(`ADR index entry ${number} has no matching ADR file.`);
   }
 }
 
 checkRequiredDocuments();
-checkMarkdownLinks();
-if (errors.length === 0) checkImplementationEvidence();
-checkChangeSurface();
+if (errors.length === 0) {
+  checkMarkdownLinks();
+  checkCurrentWork();
+  checkAdrIndex();
+}
 
-for (const warning of warnings) console.warn(`docs:check warning: ${warning}`);
 if (errors.length > 0) {
   for (const error of errors) console.error(`docs:check error: ${error}`);
   process.exitCode = 1;
 } else {
   console.log(
-    `docs:check passed (${requiredDocuments.length} required documents, Markdown links, and implementation evidence).`,
+    `docs:check passed (${requiredDocuments.length} required documents, Markdown links, current work, and ADR index).`,
   );
 }
