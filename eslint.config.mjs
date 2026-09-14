@@ -9,6 +9,8 @@ export default ts.config(
       'packages/api-client/src/generated.ts',
       '.scratch/**',
       '.github/skills/impeccable/**',
+      '.agents/skills/impeccable/**',
+      '.impeccable/**',
     ],
   },
   js.configs.recommended,

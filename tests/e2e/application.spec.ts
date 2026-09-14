@@ -109,7 +109,7 @@ test.describe.serial('isolated local application', () => {
     });
     await page.goto(`${baseUrl}/challenges`);
     await expect(page.getByText('Search in Rotated Sorted Array')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Start' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Start timer' })).toBeEnabled();
   });
   test('loads one-origin UI and cancellation keeps the running timer', async ({ page }) => {
     await page.addInitScript(() =>
@@ -119,9 +119,9 @@ test.describe.serial('isolated local application', () => {
       ),
     );
     await page.goto(`${baseUrl}/challenges`);
-    await expect(page.getByRole('heading', { name: 'Retain DSA' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Retain DSA' })).toBeVisible();
     await expect(page.getByText('Search in Rotated Sorted Array')).toBeVisible();
-    await page.getByRole('button', { name: 'Start' }).click();
+    await page.getByRole('button', { name: 'Start timer' }).click();
     await page.reload();
     await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible();
     await page.getByRole('button', { name: 'Complete' }).click();
@@ -133,13 +133,13 @@ test.describe.serial('isolated local application', () => {
 
   test('clears running and paused timers and releases ownership immediately', async ({ page }) => {
     await page.goto(`${baseUrl}/challenges`);
-    await page.getByRole('button', { name: 'Start' }).click();
+    await page.getByRole('button', { name: 'Start timer' }).click();
     await page.getByRole('button', { name: 'Clear' }).click();
-    await expect(page.getByRole('button', { name: 'Start' })).toBeEnabled();
-    await page.getByRole('button', { name: 'Start' }).click();
+    await expect(page.getByRole('button', { name: 'Start timer' })).toBeEnabled();
+    await page.getByRole('button', { name: 'Start timer' }).click();
     await page.getByRole('button', { name: 'Pause' }).click();
     await page.getByRole('button', { name: 'Clear' }).click();
-    await expect(page.getByRole('button', { name: 'Start' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Start timer' })).toBeEnabled();
     expect(await page.evaluate(() => localStorage.getItem('retain-dsa.timer.v1'))).toBeNull();
     expect(await client.attempt.count()).toBe(0);
   });
@@ -147,6 +147,8 @@ test.describe.serial('isolated local application', () => {
   test('saves feedback, renders analytics, and resets only user data', async ({ page }) => {
     await page.goto(`${baseUrl}/challenges`);
     await page.getByRole('button', { name: 'Complete' }).click();
+    for (const field of await page.getByRole('combobox').all())
+      await field.selectOption({ index: 1 });
     await page.getByRole('button', { name: 'Save attempt' }).click();
     await expect.poll(() => client.attempt.count()).toBe(1);
     await page.getByRole('link', { name: 'Analytics' }).click();
@@ -175,7 +177,7 @@ test.describe.serial('isolated local application', () => {
     context,
   }) => {
     await page.goto(`${baseUrl}/challenges`);
-    await page.getByRole('button', { name: 'Start' }).click();
+    await page.getByRole('button', { name: 'Start timer' }).click();
     await page.getByRole('button', { name: 'Complete' }).click();
     const generationBeforeReset = (await study.session()).generation;
     const other = await context.newPage();
@@ -190,7 +192,7 @@ test.describe.serial('isolated local application', () => {
     await page.bringToFront();
     await page.evaluate(() => window.dispatchEvent(new Event('focus')));
     await expect(page.getByRole('dialog')).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Start' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Start timer' })).toBeVisible();
     expect(await page.evaluate(() => localStorage.getItem('retain-dsa.timer.v1'))).toBeNull();
   });
 
@@ -198,7 +200,7 @@ test.describe.serial('isolated local application', () => {
     page,
   }) => {
     await page.goto(`${baseUrl}/challenges`);
-    await page.getByRole('button', { name: 'Start' }).click();
+    await page.getByRole('button', { name: 'Start timer' }).click();
     const need = (await study.discoveryNeeds()).find((item) => item.difficulty === 'Medium')!;
     await study.acceptDiscoveryPage(need, {
       problems: [
@@ -225,6 +227,8 @@ test.describe.serial('isolated local application', () => {
       page.getByText('In-progress attempt recovered from the original issuance.'),
     ).toBeVisible();
     await page.getByRole('button', { name: 'Complete' }).click();
+    for (const field of await page.getByRole('combobox').all())
+      await field.selectOption({ index: 1 });
     await page.getByRole('button', { name: 'Save attempt' }).click();
     await expect.poll(() => client.attempt.count()).toBe(1);
     await expect(page.getByRole('dialog')).not.toBeVisible();

@@ -9,3 +9,5 @@ apps/api/src/generated/prisma
 .test-runs
 .github/skills/impeccable
 .github/agents/impeccable-*.agent.md
+.agents/skills/impeccable
+.impeccable/review

@@ -1008,6 +1008,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource-variable/figtree@npm:5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource-variable/figtree@npm:5.3.0"
+  checksum: 10c0/0048a260ba9104b62925589c0113f525c179c47e02aea264f6e5487791fb706fafdcd7a3043f70786600e0e79a28093189eec3db992f71b76b924d3b06eb1d2c
+  languageName: node
+  linkType: hard
+
+"@fontsource-variable/jetbrains-mono@npm:5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource-variable/jetbrains-mono@npm:5.3.0"
+  checksum: 10c0/ba983321b530a56696b12390a377c79a962376a33359eeda37c9a2141450802e0b630e6c232d90aab0281179e623d01c77d1bc8059ce595fe865fbc6d6022ffb
+  languageName: node
+  linkType: hard
+
+"@fontsource/mukta-malar@npm:5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource/mukta-malar@npm:5.3.0"
+  checksum: 10c0/aaad5fde6fafdfc50be2131fd7272b657517c5975ec610d2b3cf559c09f9f028a0ad78a9b6059d61b03cc90c26230ed927c1e096b8b5c391e8f71ed66d1e4e97
+  languageName: node
+  linkType: hard
+
 "@grpc/grpc-js@npm:^1.11.1":
   version: 1.14.4
   resolution: "@grpc/grpc-js@npm:1.14.4"
@@ -2241,6 +2262,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@retain/web@workspace:apps/web"
   dependencies:
+    "@fontsource-variable/figtree": "npm:5.3.0"
+    "@fontsource-variable/jetbrains-mono": "npm:5.3.0"
+    "@fontsource/mukta-malar": "npm:5.3.0"
     "@retain/api-client": "npm:0.1.0"
     "@tanstack/react-query": "npm:5.102.8"
     react: "npm:19.3.0"

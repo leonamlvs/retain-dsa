@@ -32,6 +32,17 @@ const otherRecommendation = {
   url: 'https://leetcode.com/problems/find-first-and-last-position/',
 };
 
+function localIsoDate() {
+  const parts = new Intl.DateTimeFormat('en', {
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.year}-${value.month}-${value.day}`;
+}
+
 const analytics = (scope = generation) => ({
   generation: scope,
   uniqueProblems: 3,
@@ -39,7 +50,7 @@ const analytics = (scope = generation) => ({
   currentStreak: 2,
   longestStreak: 3,
   medianDurationSeconds: 90,
-  heatmap: [{ date: new Date().toISOString().slice(0, 10), count: 2 }],
+  heatmap: [{ date: localIsoDate(), count: 2 }],
   bySkill: [{ key: 'Binary Search', count: 4 }],
   byDifficulty: [{ key: 'Medium', count: 4 }],
   feedback: { independence: [], recognition: [], implementation: [], complexity: [] },
@@ -67,6 +78,12 @@ const server = setupServer(
   http.get('http://localhost/api/v1/analytics/summary', () => HttpResponse.json(analytics())),
 );
 
+async function completeFeedback(user: ReturnType<typeof userEvent.setup>) {
+  const values = ['INDEPENDENT', 'INDEPENDENT', 'SMOOTH', 'CORRECT'];
+  const fields = screen.getAllByRole('combobox');
+  for (const [index, field] of fields.entries()) await user.selectOptions(field, values[index]!);
+}
+
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   server.resetHandlers();
@@ -78,10 +95,11 @@ afterAll(() => server.close());
 test('renders the queue and cancel preserves the running timer without completing', async () => {
   const user = userEvent.setup();
   render(<App />);
-  expect(screen.getByRole('heading', { name: 'Retain DSA' })).toBeVisible();
+  expect(screen.getByRole('link', { name: 'Retain DSA' })).toBeVisible();
   expect(await screen.findByText(recommendation.title)).toBeVisible();
   expect(screen.getByLabelText('20% complete')).toBeVisible();
-  await user.click(screen.getByRole('button', { name: 'Start' }));
+  expect(screen.queryByText(/of 75 problems completed/)).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Start timer' }));
   await user.click(screen.getByRole('button', { name: 'Complete' }));
   await user.click(screen.getByRole('button', { name: 'Cancel' }));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -96,7 +114,7 @@ test('feedback traps focus and Escape restores the Complete action', async () =>
   await user.tab();
   expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
   await user.tab({ shift: true });
-  expect(screen.getByRole('button', { name: 'Save attempt' })).toHaveFocus();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
   await user.keyboard('{Escape}');
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(complete).toHaveFocus();
@@ -119,6 +137,41 @@ test('analytics displays dated evolution with counts', async () => {
   expect(screen.getByRole('rowheader', { name: '2026-09-12' })).toBeVisible();
 });
 
+test('keeps the practice queue usable when analytics is unavailable', async () => {
+  server.use(
+    http.get('http://localhost/api/v1/analytics/summary', () =>
+      HttpResponse.json(
+        { error: { code: 'TEMPORARY', message: 'Analytics unavailable.' } },
+        { status: 503 },
+      ),
+    ),
+  );
+  render(<App />);
+  expect(await screen.findByText(recommendation.title)).toBeVisible();
+  expect(screen.getByRole('alert')).toHaveTextContent('Activity unavailable');
+  expect(screen.getByLabelText('Current streak unavailable')).toHaveTextContent('—');
+  expect(screen.queryByText('0 attempts in the last 12 months')).not.toBeInTheDocument();
+});
+
+test('activity calendar exposes one tab stop and moves focus by day', async () => {
+  const user = userEvent.setup();
+  render(<App />);
+  const active = await screen.findByRole('gridcell', { name: /2 attempts/ });
+  const cells = screen.getAllByRole('gridcell');
+  expect(cells.filter((cell) => cell.tabIndex === 0)).toEqual([active]);
+  active.focus();
+  await user.keyboard('{ArrowUp}');
+  const previous = new Date(`${localIsoDate()}T00:00:00Z`);
+  previous.setUTCDate(previous.getUTCDate() - 1);
+  const previousLabel = new Intl.DateTimeFormat('en', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(previous);
+  expect(screen.getByRole('gridcell', { name: `${previousLabel}: 0 attempts` })).toHaveFocus();
+});
+
 test.each([false, true])(
   'clears a %s timer and immediately transfers ownership',
   async (paused) => {
@@ -134,17 +187,17 @@ test.each([false, true])(
     const user = userEvent.setup();
     render(<App />);
     expect(await screen.findByText(otherRecommendation.title)).toBeVisible();
-    const starts = screen.getAllByRole('button', { name: 'Start' });
+    const starts = screen.getAllByRole('button', { name: 'Start timer' });
     await user.click(starts[0]!);
-    expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Start' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Start timer' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Start timer' })).toHaveAttribute(
       'title',
       'Clear the current timer first',
     );
     if (paused) await user.click(screen.getByRole('button', { name: 'Pause' }));
     await user.click(screen.getByRole('button', { name: 'Clear' }));
     expect(localStorage.getItem('retain-dsa.timer.v1')).toBeNull();
-    const available = screen.getAllByRole('button', { name: 'Start' });
+    const available = screen.getAllByRole('button', { name: 'Start timer' });
     expect(available).toHaveLength(2);
     await user.click(available[1]!);
     expect(JSON.parse(localStorage.getItem('retain-dsa.timer.v1')!)).toMatchObject({
@@ -206,14 +259,14 @@ test.each([false, true])('reconciles a lost reset response, committed=%s', async
   );
   const user = userEvent.setup();
   render(<App />);
-  await user.click(await screen.findByRole('button', { name: 'Start' }));
+  await user.click(await screen.findByRole('button', { name: 'Start timer' }));
   await user.click(screen.getByRole('button', { name: 'Reset progress' }));
   await user.type(screen.getByRole('textbox'), 'RESET');
   await user.click(screen.getByRole('button', { name: 'Delete progress' }));
   await waitFor(() => expect(resetRequested).toBe(true));
   if (committed) {
     await waitFor(() => expect(localStorage.getItem('retain-dsa.timer.v1')).toBeNull());
-    expect(await screen.findByRole('button', { name: 'Start' })).toBeVisible();
+    expect(await screen.findByRole('button', { name: 'Start timer' })).toBeVisible();
   } else {
     expect(await screen.findByRole('button', { name: 'Pause' })).toBeVisible();
     expect(localStorage.getItem('retain-dsa.timer.v1')).not.toBeNull();
@@ -305,8 +358,9 @@ test('retries a lost completion with one idempotency key and clears only after s
   const user = userEvent.setup();
   render(<App />);
   expect(await screen.findByText(recommendation.title)).toBeVisible();
-  await user.click(screen.getByRole('button', { name: 'Start' }));
+  await user.click(screen.getByRole('button', { name: 'Start timer' }));
   await user.click(screen.getByRole('button', { name: 'Complete' }));
+  await completeFeedback(user);
   await user.click(screen.getByRole('button', { name: 'Save attempt' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Temporary failure.');
   expect(localStorage.getItem('retain-dsa.timer.v1')).not.toBeNull();
@@ -352,8 +406,9 @@ test('a late completion callback does not clear a newer timer identity', async (
   const user = userEvent.setup();
   render(<App />);
   expect(await screen.findByText(otherRecommendation.title)).toBeVisible();
-  await user.click(screen.getAllByRole('button', { name: 'Start' })[0]!);
+  await user.click(screen.getAllByRole('button', { name: 'Start timer' })[0]!);
   await user.click(screen.getAllByRole('button', { name: 'Complete' })[0]!);
+  await completeFeedback(user);
   await user.click(screen.getByRole('button', { name: 'Save attempt' }));
   localStorage.setItem(
     'retain-dsa.timer.v1',
