@@ -1,0 +1,443 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-14T00:42:52.916Z",
+  "title": "Design System: Retain DSA",
+  "extensions": {
+    "colorMeta": {
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Deep Ink",
+        "canonical": "#080a19",
+        "tonalRamp": [
+          "#080a19",
+          "#10152a",
+          "#1b2340",
+          "#303952",
+          "#566079",
+          "#818ba1",
+          "#b8bfce",
+          "#eef0f5"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Working Navy",
+        "canonical": "#0b1022",
+        "tonalRamp": [
+          "#080a19",
+          "#0b1022",
+          "#182039",
+          "#2d3650",
+          "#535d77",
+          "#7e889f",
+          "#b6bdcd",
+          "#eef0f5"
+        ]
+      },
+      "surface-raised": {
+        "role": "neutral",
+        "displayName": "Raised Navy",
+        "canonical": "#0e1930",
+        "tonalRamp": [
+          "#080a19",
+          "#0e1930",
+          "#1b2943",
+          "#303e59",
+          "#56647e",
+          "#818ba2",
+          "#b8bfce",
+          "#eef0f5"
+        ]
+      },
+      "surface-active": {
+        "role": "neutral",
+        "displayName": "Active Navy",
+        "canonical": "#0d1b31",
+        "tonalRamp": [
+          "#080a19",
+          "#0d1b31",
+          "#1a2b45",
+          "#2f405a",
+          "#55667f",
+          "#808da3",
+          "#b7c0cf",
+          "#eef1f5"
+        ]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Near White",
+        "canonical": "#f0f0f6",
+        "tonalRamp": [
+          "#12141d",
+          "#282b36",
+          "#414550",
+          "#5f636e",
+          "#858995",
+          "#adb0ba",
+          "#d3d5dc",
+          "#f0f0f6"
+        ]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Cool Secondary",
+        "canonical": "#a6afc5",
+        "tonalRamp": [
+          "#11151f",
+          "#252d3b",
+          "#3c4657",
+          "#596476",
+          "#7e899c",
+          "#a6afc5",
+          "#ced3df",
+          "#f0f2f7"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Muted Steel",
+        "canonical": "#71809b",
+        "tonalRamp": [
+          "#101520",
+          "#222c3b",
+          "#374457",
+          "#526076",
+          "#71809b",
+          "#9ca8ba",
+          "#c8ced9",
+          "#f0f2f6"
+        ]
+      },
+      "action-blue": {
+        "role": "primary",
+        "displayName": "Action Blue",
+        "canonical": "#38a3f8",
+        "tonalRamp": [
+          "#071d31",
+          "#0b3557",
+          "#0d4f80",
+          "#126cac",
+          "#1d88d6",
+          "#38a3f8",
+          "#8bccff",
+          "#e4f4ff"
+        ]
+      },
+      "action-blue-strong": {
+        "role": "primary",
+        "displayName": "Bright Action Blue",
+        "canonical": "#71c4ff",
+        "tonalRamp": [
+          "#071d31",
+          "#0b3557",
+          "#0d4f80",
+          "#126cac",
+          "#1d88d6",
+          "#38a3f8",
+          "#71c4ff",
+          "#e4f4ff"
+        ]
+      },
+      "activity-green": {
+        "role": "secondary",
+        "displayName": "Activity Green",
+        "canonical": "#48d597",
+        "tonalRamp": [
+          "#08251d",
+          "#0d3d2e",
+          "#115b40",
+          "#177b54",
+          "#229d6a",
+          "#48d597",
+          "#91ebbf",
+          "#e2faee"
+        ]
+      },
+      "warning-amber": {
+        "role": "tertiary",
+        "displayName": "Difficulty Amber",
+        "canonical": "#f0b34d",
+        "tonalRamp": [
+          "#2a1a05",
+          "#493008",
+          "#6c490d",
+          "#936516",
+          "#bd8327",
+          "#f0b34d",
+          "#f8d58d",
+          "#fff3da"
+        ]
+      },
+      "destructive-red": {
+        "role": "tertiary",
+        "displayName": "Restrained Red",
+        "canonical": "#ef7278",
+        "tonalRamp": [
+          "#2d1013",
+          "#4d1c21",
+          "#722b31",
+          "#9a3b43",
+          "#c34f57",
+          "#ef7278",
+          "#f6acb0",
+          "#ffe6e7"
+        ]
+      },
+      "border-subtle": {
+        "role": "neutral",
+        "displayName": "Cool Rule",
+        "canonical": "rgba(154, 176, 209, 0.15)",
+        "tonalRamp": [
+          "#111620",
+          "#252e3c",
+          "#3c4758",
+          "#596576",
+          "#7f8a9c",
+          "#a6b0c0",
+          "#ced3dd",
+          "#f0f2f6"
+        ]
+      },
+      "border-focus": {
+        "role": "primary",
+        "displayName": "Focused Rule",
+        "canonical": "rgba(56, 163, 248, 0.52)",
+        "tonalRamp": [
+          "#071d31",
+          "#0b3557",
+          "#0d4f80",
+          "#126cac",
+          "#1d88d6",
+          "#38a3f8",
+          "#8bccff",
+          "#e4f4ff"
+        ]
+      },
+      "heat-empty": {
+        "role": "secondary",
+        "displayName": "Empty Activity",
+        "canonical": "#101b2c",
+        "tonalRamp": [
+          "#101b2c",
+          "#10392f",
+          "#126346",
+          "#1b9a66",
+          "#48d597",
+          "#82e5b6",
+          "#baf1d5",
+          "#e8faf1"
+        ]
+      },
+      "heat-low": {
+        "role": "secondary",
+        "displayName": "Low Activity",
+        "canonical": "#10392f",
+        "tonalRamp": [
+          "#101b2c",
+          "#10392f",
+          "#126346",
+          "#1b9a66",
+          "#48d597",
+          "#82e5b6",
+          "#baf1d5",
+          "#e8faf1"
+        ]
+      },
+      "heat-medium": {
+        "role": "secondary",
+        "displayName": "Medium Activity",
+        "canonical": "#126346",
+        "tonalRamp": [
+          "#101b2c",
+          "#10392f",
+          "#126346",
+          "#1b9a66",
+          "#48d597",
+          "#82e5b6",
+          "#baf1d5",
+          "#e8faf1"
+        ]
+      },
+      "heat-high": {
+        "role": "secondary",
+        "displayName": "High Activity",
+        "canonical": "#1b9a66",
+        "tonalRamp": [
+          "#101b2c",
+          "#10392f",
+          "#126346",
+          "#1b9a66",
+          "#48d597",
+          "#82e5b6",
+          "#baf1d5",
+          "#e8faf1"
+        ]
+      },
+      "heat-peak": {
+        "role": "secondary",
+        "displayName": "Peak Activity",
+        "canonical": "#48d597",
+        "tonalRamp": [
+          "#101b2c",
+          "#10392f",
+          "#126346",
+          "#1b9a66",
+          "#48d597",
+          "#82e5b6",
+          "#baf1d5",
+          "#e8faf1"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Editorial display",
+        "purpose": "Mukta Malar route identity and first-view statements."
+      },
+      "headline": {
+        "displayName": "Section headline",
+        "purpose": "Figtree queue and analytics section headings."
+      },
+      "title": {
+        "displayName": "Problem title",
+        "purpose": "Figtree recommendation titles and compact content headings."
+      },
+      "body": {
+        "displayName": "Operational body",
+        "purpose": "Figtree descriptions, instructions, and supporting copy."
+      },
+      "label": {
+        "displayName": "Technical metadata",
+        "purpose": "JetBrains Mono IDs, timers, dates, counts, and status."
+      }
+    },
+    "shadows": [
+      {
+        "name": "completion-dialog",
+        "value": "0 28px 90px rgba(0, 0, 0, 0.5)",
+        "purpose": "Protected focus for the completion dialog."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-transition",
+        "value": "160ms ease",
+        "purpose": "Color, border, opacity, and small transform feedback on controls."
+      },
+      {
+        "name": "reduced-state-transition",
+        "value": "160ms ease; color, border-color, background-color, opacity only",
+        "purpose": "Reduced-motion feedback with heatmap scaling removed."
+      }
+    ],
+    "breakpoints": [
+      { "name": "queue-reflow", "value": "1100px" },
+      { "name": "page-stack", "value": "760px" },
+      { "name": "compact", "value": "560px" },
+      { "name": "coarse-pointer", "value": "(pointer: coarse)" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Blue fill for the decisive action in a workflow.",
+      "html": "<button class=\"ds-button-primary\">Complete</button>",
+      "css": ".ds-button-primary { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 14px; border: 1px solid var(--blue, #38a3f8); border-radius: 4px; background: var(--blue, #38a3f8); color: #04111e; font: 650 12px/1 'Figtree Variable', sans-serif; transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease; cursor: pointer; } .ds-button-primary:hover { border-color: var(--blue-strong, #71c4ff); background: var(--blue-strong, #71c4ff); } .ds-button-primary:focus-visible { outline: 2px solid var(--blue-strong, #71c4ff); outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Quiet bordered control for secondary actions.",
+      "html": "<button class=\"ds-button-ghost\">View</button>",
+      "css": ".ds-button-ghost { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 14px; border: 1px solid var(--rule, rgba(154, 176, 209, 0.15)); border-radius: 4px; background: rgba(16, 27, 46, 0.68); color: var(--text, #f0f0f6); font: 650 12px/1 'Figtree Variable', sans-serif; transition: border-color 160ms ease, color 160ms ease; cursor: pointer; } .ds-button-ghost:hover { border-color: var(--rule-strong, rgba(56, 163, 248, 0.52)); color: var(--blue-strong, #71c4ff); } .ds-button-ghost:focus-visible { outline: 2px solid var(--blue-strong, #71c4ff); outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Inset navy field for feedback and confirmation values.",
+      "html": "<label class=\"ds-field\">Duration <input value=\"24\" aria-label=\"Duration in minutes\"></label>",
+      "css": ".ds-field { display: grid; gap: 7px; color: var(--text, #f0f0f6); font: 620 13px/1.4 'Figtree Variable', sans-serif; } .ds-field input { min-height: 44px; padding: 9px 11px; border: 1px solid var(--rule, rgba(154, 176, 209, 0.15)); border-radius: 4px; background: #080e1d; color: var(--text, #f0f0f6); font: inherit; } .ds-field input:focus-visible { outline: 2px solid var(--blue-strong, #71c4ff); outline-offset: 3px; }"
+    },
+    {
+      "name": "Active Navigation",
+      "kind": "nav",
+      "description": "Muted route link with a thin blue active indicator.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Preview navigation\"><a href=\"#\">Challenges</a><a class=\"ds-active\" href=\"#\">Analytics</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 32px; height: 44px; } .ds-nav a { display: grid; place-items: center; border-bottom: 2px solid transparent; color: var(--text-muted, #71809b); font: 620 14px/1 'Figtree Variable', sans-serif; text-decoration: none; transition: border-color 160ms ease, color 160ms ease; } .ds-nav a:hover, .ds-nav a.ds-active { color: var(--text, #f0f0f6); } .ds-nav a.ds-active { border-color: var(--blue, #38a3f8); } .ds-nav a:focus-visible { outline: 2px solid var(--blue-strong, #71c4ff); outline-offset: 3px; }"
+    },
+    {
+      "name": "Difficulty Badge",
+      "kind": "chip",
+      "description": "Outlined metadata badge whose label reinforces its semantic color.",
+      "html": "<span class=\"ds-difficulty\">Medium</span>",
+      "css": ".ds-difficulty { display: inline-flex; width: max-content; padding: 5px 8px; border: 1px solid currentColor; border-radius: 4px; color: var(--amber, #f0b34d); font: 650 11px/1.4 'JetBrains Mono Variable', monospace; }"
+    },
+    {
+      "name": "Editorial Challenge Row",
+      "kind": "custom",
+      "description": "Rule-divided recommendation row with title-first hierarchy.",
+      "html": "<article class=\"ds-challenge-row\"><span class=\"ds-challenge-id\">#33</span><div><h3>Search in Rotated Sorted Array</h3><p>Binary Search · Array</p></div><button>Complete</button></article>",
+      "css": ".ds-challenge-row { min-height: 76px; display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--rule, rgba(154, 176, 209, 0.15)); color: var(--text, #f0f0f6); font-family: 'Figtree Variable', sans-serif; } .ds-challenge-id { align-self: start; padding-top: 3px; color: var(--blue, #38a3f8); font: 650 13px/1.4 'JetBrains Mono Variable', monospace; } .ds-challenge-row h3 { margin: 0; font-size: 17px; line-height: 1.3; letter-spacing: -0.012em; } .ds-challenge-row p { margin: 5px 0 0; color: var(--text-muted, #71809b); font-size: 12px; } .ds-challenge-row button { min-height: 44px; padding: 0 14px; border: 1px solid var(--blue, #38a3f8); border-radius: 4px; background: var(--blue, #38a3f8); color: #04111e; font: 650 12px/1 'Figtree Variable', sans-serif; cursor: pointer; } .ds-challenge-row button:hover { background: var(--blue-strong, #71c4ff); border-color: var(--blue-strong, #71c4ff); } .ds-challenge-row button:focus-visible { outline: 2px solid var(--blue-strong, #71c4ff); outline-offset: 3px; }"
+    },
+    {
+      "name": "Activity Cell",
+      "kind": "custom",
+      "description": "Square, keyboard-focusable heatmap cell with touch adaptation.",
+      "html": "<button class=\"ds-heat\" role=\"gridcell\" aria-label=\"September 13, 2026: 3 attempts\"></button>",
+      "css": ".ds-heat { --ds-cell: 11px; width: var(--ds-cell); height: var(--ds-cell); padding: 0; border: 0; border-radius: 2px; background: var(--heat-3, #1b9a66); transition: transform 160ms ease; cursor: pointer; } .ds-heat:hover { transform: scale(1.22); box-shadow: 0 0 0 1px var(--canvas, #080a19); } .ds-heat:focus-visible { outline: 2px solid var(--blue-strong, #71c4ff); outline-offset: 2px; transform: scale(1.16); } @media (pointer: coarse) { .ds-heat { --ds-cell: 24px; } } @media (prefers-reduced-motion: reduce) { .ds-heat { transition-property: background-color, border-color, color, opacity; } .ds-heat:hover, .ds-heat:focus-visible { transform: none; } }"
+    },
+    {
+      "name": "Owned Timer",
+      "kind": "custom",
+      "description": "Green operational state for the single recommendation that owns the timer.",
+      "html": "<span class=\"ds-timer\"><i aria-hidden=\"true\"></i>00:08:31</span>",
+      "css": ".ds-timer { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid rgba(72, 213, 151, 0.38); border-radius: 4px; color: var(--green, #48d597); font: 650 13px/1.4 'JetBrains Mono Variable', monospace; } .ds-timer i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 12px currentColor; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Practice Ledger",
+    "overview": "Retain DSA is a precise daily tool: technical without costume, editorial without spectacle, and calm enough for honest reflection. Practice history leads the first view, curriculum progress provides context, and the recommendation queue presents clear next actions without turning the page into a scoreboard.\n\nThe identity comes from deep ink surfaces, broad display type, compact operational metadata, thin cool rules, and small state signals. Decorative effects stay local and quiet so real practice data remains the strongest visual material.",
+    "keyCharacteristics": [
+      "deep ink and navy surfaces",
+      "broad editorial display type",
+      "sparse monospaced metadata",
+      "blue actions and progress",
+      "green recorded activity and timer states",
+      "warm accents reserved for meaning"
+    ],
+    "rules": [
+      {
+        "name": "The Signal Separation Rule",
+        "body": "Blue means interaction or progress, green means activity or timer state, amber means attention, and red means danger or hard difficulty. Never rely on color alone to communicate state.",
+        "section": "colors"
+      },
+      {
+        "name": "The Sparse Mono Rule",
+        "body": "Use monospaced type for IDs, timers, dates, counts, and technical status; keep narrative and action copy in Figtree.",
+        "section": "typography"
+      },
+      {
+        "name": "The Protected Elevation Rule",
+        "body": "Reserve strong shadow and backdrop blur for modal focus; ordinary rows and sections remain flat.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do make real activity and the next practice decision the dominant content.",
+      "Do use rules, alignment, and whitespace to organize editorial rows.",
+      "Do preserve clear keyboard focus, semantic calendar roles, roving focus, and touch-friendly calendar targets.",
+      "Do keep loading, error, empty, shortage, active, and paused states visually and verbally distinct."
+    ],
+    "donts": [
+      "Don't turn the page into a uniform grid of equally weighted cards.",
+      "Don't use monospaced type, glow, gradients, or rounded containers as generic developer decoration.",
+      "Don't let progress, activity, timer, difficulty, and destructive signals share ambiguous color meaning.",
+      "Don't use continuous decorative motion; keep transitions short, functional, and reduced-motion aware."
+    ]
+  }
+}
