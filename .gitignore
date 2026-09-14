@@ -14,3 +14,4 @@ playwright-report/
 .impeccable/build/
 .impeccable/review/
 apps/web/.impeccable/mocks/
+apps/web/.impeccable/critique/
