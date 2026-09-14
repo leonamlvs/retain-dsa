@@ -1,0 +1,17 @@
+node_modules/
+.yarn/install-state.gz
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+.scratch/
+.test-runs/
+test-results/
+playwright-report/
+*.tsbuildinfo
+*.log
+.impeccable/build/
+.impeccable/review/
+apps/web/.impeccable/mocks/
+apps/web/.impeccable/critique/

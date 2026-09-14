@@ -1,0 +1,26 @@
+name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  foundations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.19.0'
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn docs:check
+      - run: yarn generate:db
+      - run: yarn format:check
+      - run: yarn lint
+      - run: yarn typecheck
+      - run: yarn check:client
+      - run: yarn test:unit
+      - run: yarn test:provider
+      - run: yarn test:db
+      - run: yarn playwright install --with-deps chromium
+      - run: yarn test:e2e
+      - run: yarn build

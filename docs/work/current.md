@@ -1,6 +1,6 @@
 # Current work — documentation consolidation and MVP recovery
 
-Status: **Proposed execution plan**. This file describes intended work only and does not override `docs/spec/*`.
+Status: **Complete**. This file describes completed work and does not override `docs/spec/*`.
 
 ## Goal
 
@@ -70,3 +70,12 @@ For each work item:
 5. run the appropriate broader gate before claiming acceptance;
 6. update a specification only when desired behavior changed, not to narrate implementation progress;
 7. propose a cohesive commit and wait for explicit approval.
+
+## Verification
+
+Verification on 2026-09-13:
+
+- `yarn check` passed, including documentation structure, formatting, boundaries, typechecking, and generated-client drift;
+- `yarn verify` passed with 95 Jest tests, 6 critical Chromium E2E tests, and both production builds;
+- an isolated Compose project started through `yarn dev`, applied migrations, returned healthy API/UI responses, kept PostgreSQL private, and preserved its progress generation across an app restart;
+- only the disposable verification project, network, containers, and volumes were removed afterward.
