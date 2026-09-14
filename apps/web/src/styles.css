@@ -454,11 +454,22 @@ button.heat:focus-visible {
 .status.refilling {
   color: var(--amber);
 }
-.queue-columns,
-.challenge-row {
+.queue-section {
   display: grid;
   grid-template-columns: minmax(250px, 1.7fr) 90px 120px minmax(120px, 0.9fr) auto;
   column-gap: 20px;
+}
+.queue-section > * {
+  grid-column: 1 / -1;
+}
+.queue-columns,
+.challenge-list,
+.challenge-row {
+  display: grid;
+  grid-template-columns: subgrid;
+}
+.queue-columns,
+.challenge-row {
   align-items: center;
 }
 .queue-columns {
@@ -471,7 +482,18 @@ button.heat:focus-visible {
   text-transform: uppercase;
 }
 .challenge-list {
+  grid-column: 1 / -1;
+}
+.challenge-list > * {
+  grid-column: 1 / -1;
+}
+.recovered {
   display: grid;
+  grid-template-columns: subgrid;
+}
+.recovered > p,
+.recovered > .challenge-row {
+  grid-column: 1 / -1;
 }
 .challenge-row {
   min-height: 76px;
@@ -479,8 +501,6 @@ button.heat:focus-visible {
   border-bottom: 1px solid var(--rule);
 }
 .challenge-row.timer-owned {
-  margin: 0 -16px;
-  padding-inline: 16px;
   border-color: rgba(56, 163, 248, 0.24);
   background: linear-gradient(90deg, rgba(21, 66, 105, 0.24), rgba(11, 16, 34, 0.22));
 }

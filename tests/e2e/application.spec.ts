@@ -111,6 +111,33 @@ test.describe.serial('isolated local application', () => {
     await expect(page.getByText('Search in Rotated Sorted Array')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Start timer' })).toBeEnabled();
   });
+
+  test('aligns queue headings with row columns as actions change width', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(`${baseUrl}/challenges`);
+    await expect(page.getByText('Search in Rotated Sorted Array')).toBeVisible();
+
+    const expectAlignedColumns = async () => {
+      const headerStarts = await page
+        .locator('.queue-columns > span')
+        .evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().left));
+      const rowStarts = await page
+        .locator('.challenge-row')
+        .first()
+        .evaluate((row) =>
+          Array.from(row.children).map((element) => element.getBoundingClientRect().left),
+        );
+      expect(rowStarts).toHaveLength(headerStarts.length);
+      for (const [index, start] of rowStarts.entries())
+        expect(Math.abs(start - headerStarts[index]!)).toBeLessThan(0.5);
+    };
+
+    await expectAlignedColumns();
+    await page.getByRole('button', { name: 'Start timer' }).click();
+    await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible();
+    await expectAlignedColumns();
+  });
+
   test('loads one-origin UI and cancellation keeps the running timer', async ({ page }) => {
     await page.addInitScript(() =>
       localStorage.setItem(

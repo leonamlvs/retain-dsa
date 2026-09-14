@@ -133,7 +133,7 @@ Near-black navy establishes the workspace. Near-white text and cool muted copy p
 
 ## Layout
 
-Use one centered content rail capped at 1385px with fluid 4vw side gutters. The primary overview is a responsive two-column grid: route statement at left, compact coverage at right, then the annual activity calendar spanning the full width above the recommendation queue. Challenge recommendations form one editorial list divided by rules, with aligned metadata columns and actions at the right.
+Use one centered content rail capped at 1385px with fluid 4vw side gutters. The primary overview is a responsive two-column grid: route statement at left, compact coverage at right, then the annual activity calendar spanning the full width above the recommendation queue. Challenge recommendations form one editorial list divided by rules. The column header, list, and rows share one CSS subgrid so difficulty, primary skill, tags, and actions retain identical track starts even when timer controls widen the actions track.
 
 At 1100px, queue columns collapse into readable row groups and analytics becomes a single column. At 760px, the overview stacks, the calendar scrolls horizontally, and metrics reflow. At 560px, challenge metadata and controls wrap into a compact single-column reading order. Coarse pointers expand calendar cells to 24px while preserving the seven-row grid.
 
