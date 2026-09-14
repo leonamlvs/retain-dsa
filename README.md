@@ -2,11 +2,21 @@
 
 A local-first app for developers who want to retain DSA skills over time, using spaced repetition and varied practice to reinforce patterns instead of memorizing solutions.
 
+## Features
+
 - Official LeetCode 75 coverage
 - Adaptive recommendations
-- Structured feedback on independence, pattern recognition, implementation difficulty, and Big-O analysis
+- Structured post-attempt feedback
 - Optional solve-time tracking
 - Progress analytics
+
+![Retain DSA dashboard](docs/assets/retain-dsa-dashboard.png)
+
+## Analytics
+
+Track practice history, curriculum progress, streaks, performance by skill and difficulty, and feedback trends across independence, pattern recognition, implementation difficulty, and Big-O analysis.
+
+![Retain DSA analytics](docs/assets/retain-dsa-analytics.png)
 
 ## Getting started
 
