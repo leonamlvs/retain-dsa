@@ -101,16 +101,13 @@ svg {
   text-decoration: none;
 }
 .logo-mark {
-  display: grid;
-  place-items: center;
+  display: block;
   width: 34px;
   height: 34px;
-  border: 1px solid rgba(56, 163, 248, 0.58);
-  border-radius: 4px;
-  background: rgba(56, 163, 248, 0.09);
-  color: var(--blue-strong);
-  font-family: 'JetBrains Mono Variable', monospace;
-  font-size: 14px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, var(--blue-strong), rgb(15, 31, 83));
+  -webkit-mask: url('/logo.svg') center / contain no-repeat;
+  mask: url('/logo.svg') center / contain no-repeat;
 }
 nav {
   display: flex;
@@ -1013,9 +1010,16 @@ footer div {
   gap: 24px;
 }
 footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--text-soft);
   font-weight: 620;
   text-decoration: none;
+}
+footer a svg {
+  flex-shrink: 0;
+  font-size: 14px;
 }
 footer a:hover {
   color: var(--blue-strong);

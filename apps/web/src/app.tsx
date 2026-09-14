@@ -125,13 +125,27 @@ function CloseIcon() {
   );
 }
 
+function LinkedInIcon() {
+  return (
+    <svg viewBox="0 0 448 512" aria-hidden="true">
+      <path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3C448 46.5 433.6 32 416 32ZM135.4 416H69V202.2h66.5V416Zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96s38.5 17.3 38.5 38.5c0 21.3-17.2 38.5-38.5 38.5ZM384.3 416h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416Z" />
+    </svg>
+  );
+}
+
+function GitHubIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 .3A12 12 0 0 0 8.2 23.68c.6.11.82-.26.82-.58v-2.24c-3.34.73-4.04-1.42-4.04-1.42-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.09-.73.09-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.1-.78.42-1.3.76-1.6-2.67-.31-5.47-1.34-5.47-5.93 0-1.31.47-2.38 1.23-3.22-.12-.3-.53-1.52.12-3.18 0 0 1-.32 3.3 1.23a11.46 11.46 0 0 1 6 0c2.29-1.55 3.29-1.23 3.29-1.23.66 1.66.25 2.88.13 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.81 5.62-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12 12 0 0 0 12 .3Z" />
+    </svg>
+  );
+}
+
 function Header({ streak }: { streak: number | null }) {
   return (
     <header className="site-header">
       <NavLink className="brand" to="/challenges">
-        <span className="logo-mark" aria-hidden="true">
-          R
-        </span>
+        <span className="logo-mark" aria-hidden="true" />
         <span className="brand-name">Retain DSA</span>
       </NavLink>
       <nav aria-label="Main navigation">
@@ -987,9 +1001,11 @@ function Shell() {
         <div>
           <a href="https://www.linkedin.com/in/leonamlvs/" target="_blank" rel="noreferrer">
             LinkedIn
+            <LinkedInIcon />
           </a>
           <a href="https://github.com/leonamlvs" target="_blank" rel="noreferrer">
             GitHub
+            <GitHubIcon />
           </a>
         </div>
       </footer>
