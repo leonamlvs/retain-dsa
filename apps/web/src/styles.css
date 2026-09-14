@@ -500,9 +500,78 @@ button.heat:focus-visible {
   padding: 14px 0;
   border-bottom: 1px solid var(--rule);
 }
+.challenge-list > .challenge-row:not(.skeleton-row) {
+  animation: challenge-arrive 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 .challenge-row.timer-owned {
   border-color: rgba(56, 163, 248, 0.24);
   background: linear-gradient(90deg, rgba(21, 66, 105, 0.24), rgba(11, 16, 34, 0.22));
+}
+.skeleton-row {
+  pointer-events: none;
+}
+.skeleton-block {
+  display: block;
+  height: 10px;
+  border-radius: 2px;
+  background: rgba(154, 176, 209, 0.12);
+  animation: skeleton-breathe 1.8s ease-in-out infinite;
+}
+.skeleton-row:nth-child(2n) .skeleton-block {
+  animation-delay: -0.6s;
+}
+.skeleton-number {
+  width: 32px;
+  margin-top: 5px;
+}
+.skeleton-title {
+  width: min(82%, 280px);
+  height: 15px;
+}
+.skeleton-reason {
+  width: min(56%, 170px);
+  margin-top: 9px;
+}
+.skeleton-difficulty {
+  width: 62px;
+  height: 25px;
+}
+.skeleton-skill {
+  width: 86px;
+}
+.skeleton-tags,
+.skeleton-actions {
+  display: flex;
+  gap: 8px;
+}
+.skeleton-tags .skeleton-block {
+  width: 54px;
+  height: 22px;
+}
+.skeleton-tags .skeleton-block:last-child {
+  width: 70px;
+}
+.skeleton-actions {
+  justify-content: flex-end;
+}
+.skeleton-actions .skeleton-block {
+  width: 60px;
+  height: 40px;
+}
+@keyframes skeleton-breathe {
+  0%,
+  100% {
+    background-color: rgba(154, 176, 209, 0.1);
+  }
+  50% {
+    background-color: rgba(154, 176, 209, 0.2);
+  }
+}
+@keyframes challenge-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
 }
 .problem-identity {
   display: grid;
@@ -981,6 +1050,15 @@ footer a:hover {
     justify-content: flex-start;
     margin-left: 68px;
   }
+  .skeleton-tags {
+    grid-row: 3;
+  }
+  .skeleton-actions {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    justify-content: flex-start;
+    margin-left: 68px;
+  }
   .analytics-layout {
     grid-template-columns: 1fr;
   }
@@ -1117,6 +1195,13 @@ footer a:hover {
     margin-left: 0;
     flex-wrap: wrap;
   }
+  .skeleton-tags {
+    grid-column: 1 / -1;
+    margin-left: 46px;
+  }
+  .skeleton-actions {
+    margin-left: 0;
+  }
   .challenge-actions > * {
     flex: 1;
   }
@@ -1169,5 +1254,11 @@ footer a:hover {
   button.heat:hover,
   button.heat:focus-visible {
     transform: none;
+  }
+  .skeleton-block {
+    animation: none;
+  }
+  .challenge-list > .challenge-row:not(.skeleton-row) {
+    animation: none;
   }
 }

@@ -47,7 +47,7 @@ test('does no provider work when persisted discovery needs are already adequate'
     new NoOpLogger(),
   ).run();
   expect(provider.discover).not.toHaveBeenCalled();
-  expect(study.replenish).toHaveBeenCalledTimes(1);
+  expect(study.replenish).toHaveBeenCalledTimes(2);
 });
 
 test('persists complete discovery before ranking and replenishes after provider failure', async () => {
@@ -78,7 +78,7 @@ test('persists complete discovery before ranking and replenishes after provider 
     new NoOpLogger(),
   ).run();
   expect(provider.discover).toHaveBeenCalledTimes(1);
-  expect(study.replenish).toHaveBeenCalledTimes(1);
+  expect(study.replenish).toHaveBeenCalledTimes(2);
 
   provider.discover = jest.fn(async () => {
     throw new Error('offline');
@@ -90,7 +90,7 @@ test('persists complete discovery before ranking and replenishes after provider 
     defaultConfig,
     new NoOpLogger(),
   ).run();
-  expect(study.replenish).toHaveBeenCalledTimes(2);
+  expect(study.replenish).toHaveBeenCalledTimes(4);
 });
 
 test('restarts a changed provider scan within the same bounded operation', async () => {

@@ -72,7 +72,7 @@ const server = setupServer(
     HttpResponse.json({
       generation,
       items: [recommendation],
-      refill: { status: 'READY', reason: null },
+      refill: { status: 'READY', targetSize: 5, reason: null },
     }),
   ),
   http.get('http://localhost/api/v1/analytics/summary', () => HttpResponse.json(analytics())),
@@ -153,6 +153,29 @@ test('keeps the practice queue usable when analytics is unavailable', async () =
   expect(screen.queryByText('0 attempts in the last 12 months')).not.toBeInTheDocument();
 });
 
+test('keeps loaded cards and replaces only the remaining refilling slots', async () => {
+  let calls = 0;
+  server.use(
+    http.get('http://localhost/api/v1/recommendations', () => {
+      calls += 1;
+      return HttpResponse.json({
+        generation,
+        items: [recommendation, otherRecommendation],
+        refill: { status: calls === 1 ? 'REFILLING' : 'READY', targetSize: 4, reason: null },
+      });
+    }),
+  );
+  const { container } = render(<App />);
+  expect(await screen.findByText(recommendation.title)).toBeVisible();
+  expect(screen.getByText(otherRecommendation.title)).toBeVisible();
+  expect(screen.getByText('Preparing 2 more recommendations…')).toBeInTheDocument();
+  expect(container.querySelectorAll('.skeleton-row')).toHaveLength(2);
+  await waitFor(() => expect(container.querySelectorAll('.skeleton-row')).toHaveLength(0), {
+    timeout: 3000,
+  });
+  expect(screen.queryByText('No eligible challenges right now')).not.toBeInTheDocument();
+});
+
 test('activity calendar exposes one tab stop and moves focus by day', async () => {
   const user = userEvent.setup();
   render(<App />);
@@ -180,7 +203,7 @@ test.each([false, true])(
         HttpResponse.json({
           generation,
           items: [recommendation, otherRecommendation],
-          refill: { status: 'READY', reason: null },
+          refill: { status: 'READY', targetSize: 5, reason: null },
         }),
       ),
     );
@@ -246,7 +269,7 @@ test.each([false, true])('reconciles a lost reset response, committed=%s', async
       HttpResponse.json({
         generation: currentGeneration(),
         items: [recommendation],
-        refill: { status: 'READY', reason: null },
+        refill: { status: 'READY', targetSize: 5, reason: null },
       }),
     ),
     http.get('http://localhost/api/v1/analytics/summary', () =>
@@ -303,6 +326,7 @@ test('an older request cannot overwrite the new generation after reset', async (
         items: [responseGeneration === generation ? recommendation : otherRecommendation],
         refill: {
           status: recommendationCalls === 1 ? 'REFILLING' : 'READY',
+          targetSize: 5,
           reason: null,
         },
       });
@@ -381,7 +405,7 @@ test('a late completion callback does not clear a newer timer identity', async (
       HttpResponse.json({
         generation,
         items: [recommendation, otherRecommendation],
-        refill: { status: 'READY', reason: null },
+        refill: { status: 'READY', targetSize: 5, reason: null },
       }),
     ),
     http.post('http://localhost/api/v1/attempts', async () => {

@@ -34,7 +34,7 @@ function service(status: 200 | 201 = 201): StudyService {
     recommendations: async () => ({
       generation,
       items: [],
-      refill: { status: 'SHORTAGE', reason: 'NO_ELIGIBLE_CANDIDATE' },
+      refill: { status: 'SHORTAGE', targetSize: 5, reason: 'NO_ELIGIBLE_CANDIDATE' },
     }),
     recommendation: async () => null,
     complete: async (input) => ({

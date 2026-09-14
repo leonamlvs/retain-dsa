@@ -629,6 +629,30 @@ function queueStatus(data: ReturnType<typeof useStudyData>) {
   return ['refilling', 'Connecting'];
 }
 
+function QueueSkeletonRow({ position }: { position: number }) {
+  return (
+    <div className="challenge-row skeleton-row" aria-hidden="true" data-position={position}>
+      <div className="problem-identity">
+        <span className="skeleton-block skeleton-number" />
+        <div>
+          <span className="skeleton-block skeleton-title" />
+          <span className="skeleton-block skeleton-reason" />
+        </div>
+      </div>
+      <span className="skeleton-block skeleton-difficulty" />
+      <span className="skeleton-block skeleton-skill" />
+      <div className="skeleton-tags">
+        <span className="skeleton-block" />
+        <span className="skeleton-block" />
+      </div>
+      <div className="skeleton-actions">
+        <span className="skeleton-block" />
+        <span className="skeleton-block" />
+      </div>
+    </div>
+  );
+}
+
 function ChallengesPage({ data }: { data: ReturnType<typeof useStudyData> }) {
   const timer = useTimer(data.generation);
   const [selected, setSelected] = useState<Recommendation | null>(null);
@@ -657,6 +681,16 @@ function ChallengesPage({ data }: { data: ReturnType<typeof useStudyData> }) {
     ]);
   };
   const [statusClass, statusText] = queueStatus(data);
+  const queueItems = data.recommendations.data?.items ?? [];
+  const queueIsEmpty = queueItems.length === 0;
+  const queueIsRefilling = data.recommendations.data?.refill.status === 'REFILLING';
+  const targetSize = data.recommendations.data?.refill.targetSize ?? 5;
+  const showQueuePlaceholders =
+    !data.reconciling &&
+    !data.connectionError &&
+    !data.recommendations.error &&
+    (data.recommendations.isLoading || queueIsRefilling);
+  const placeholderCount = showQueuePlaceholders ? Math.max(0, targetSize - queueItems.length) : 0;
   return (
     <>
       <StudyOverview data={data} route="challenges" />
@@ -682,11 +716,6 @@ function ChallengesPage({ data }: { data: ReturnType<typeof useStudyData> }) {
           <span>Tags</span>
           <span>Actions</span>
         </div>
-        {data.recommendations.isLoading && (
-          <div className="empty" role="status">
-            Preparing your queue…
-          </div>
-        )}
         {(data.recommendations.error || data.connectionError) && !data.reconciling && (
           <div className="empty error">
             <p>
@@ -716,17 +745,26 @@ function ChallengesPage({ data }: { data: ReturnType<typeof useStudyData> }) {
             <button onClick={() => void recovered.refetch()}>Retry timed attempt</button>
           </p>
         )}
-        {!data.reconciling && data.recommendations.data?.items.length === 0 && (
-          <div className="empty">
-            <h3>No eligible challenges right now</h3>
-            <p>
-              {data.recommendations.data?.refill.reason ??
-                'The curriculum is syncing, or there is no valid free candidate.'}
-            </p>
-          </div>
-        )}
-        <div className="challenge-list">
-          {data.recommendations.data?.items.map((item) => (
+        {!data.reconciling &&
+          placeholderCount === 0 &&
+          data.recommendations.isSuccess &&
+          queueIsEmpty && (
+            <div className="empty">
+              <h3>No eligible challenges right now</h3>
+              <p>
+                {data.recommendations.data?.refill.reason ??
+                  'There is no valid free candidate for the current practice needs.'}
+              </p>
+            </div>
+          )}
+        <div className="challenge-list" aria-busy={placeholderCount > 0 || undefined}>
+          {placeholderCount > 0 && (
+            <span className="sr-only" role="status" aria-live="polite">
+              Preparing {placeholderCount} more{' '}
+              {placeholderCount === 1 ? 'recommendation' : 'recommendations'}…
+            </span>
+          )}
+          {queueItems.map((item) => (
             <ChallengeCard
               key={item.id}
               item={item}
@@ -735,6 +773,10 @@ function ChallengesPage({ data }: { data: ReturnType<typeof useStudyData> }) {
               onComplete={setSelected}
             />
           ))}
+          {Array.from({ length: placeholderCount }, (_, index) => {
+            const position = queueItems.length + index;
+            return <QueueSkeletonRow key={`queue-placeholder-${position}`} position={position} />;
+          })}
           {recovered.data?.recordable && (
             <div className="recovered">
               <p>In-progress attempt recovered from the original issuance.</p>

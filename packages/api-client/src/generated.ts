@@ -565,6 +565,7 @@ export interface operations {
                         refill: {
                             /** @enum {string} */
                             status: "READY" | "REFILLING" | "SHORTAGE";
+                            targetSize: number;
                             reason: string | null;
                         };
                     };

@@ -30,10 +30,15 @@ afterAll(async () => {
 });
 test('migrations and seed are repeatable without replacing the source root', async () => {
   const before = await client.localUser.findFirstOrThrow();
+  const initialRefill = await client.workRequest.findFirstOrThrow({
+    where: { userId: before.id, generation: before.generation, kind: 'REFILL' },
+  });
+  expect(initialRefill).toMatchObject({ status: 'PENDING', details: { reason: 'INITIAL_QUEUE' } });
   await migrateTestDatabase(harness.environment);
   await seedTestDatabase(harness.environment, new Date('2027-01-01T00:00:00Z'));
   expect(await client.localUser.findFirstOrThrow()).toEqual(before);
   expect(await client.configurationActivation.count()).toBe(1);
+  expect(await client.workRequest.count({ where: { kind: 'REFILL' } })).toBe(1);
 });
 test('rollback preserves both the source sequence and revision', async () => {
   const before = await client.applicationState.findUniqueOrThrow({ where: { id: 1 } });

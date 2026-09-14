@@ -144,8 +144,11 @@ export class PrismaStudyService implements StudyService {
         where: {
           userId: user.id,
           generation: user.generation,
-          kind: 'REFILL',
-          OR: [{ status: 'RUNNING' }, { status: 'PENDING', nextRunAt: { lte: this.clock.now() } }],
+          OR: [
+            { kind: 'MAINTENANCE', status: 'RUNNING' },
+            { kind: 'REFILL', status: 'RUNNING' },
+            { kind: 'REFILL', status: 'PENDING', nextRunAt: { lte: this.clock.now() } },
+          ],
         },
       });
       return {
@@ -156,6 +159,7 @@ export class PrismaStudyService implements StudyService {
           recordable: true,
         })),
         refill: {
+          targetSize: config.scheduler.queueSize,
           status:
             rows.length >= config.scheduler.queueSize
               ? ('READY' as const)

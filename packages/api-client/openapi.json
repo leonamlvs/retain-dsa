@@ -880,6 +880,11 @@
                             "SHORTAGE"
                           ]
                         },
+                        "targetSize": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": true
+                        },
                         "reason": {
                           "type": "string",
                           "nullable": true
@@ -887,6 +892,7 @@
                       },
                       "required": [
                         "status",
+                        "targetSize",
                         "reason"
                       ]
                     }

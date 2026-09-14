@@ -35,6 +35,7 @@ export const recommendationsResponseSchema = z.object({
   items: z.array(recommendationSchema),
   refill: z.object({
     status: z.enum(['READY', 'REFILLING', 'SHORTAGE']),
+    targetSize: z.number().int().positive(),
     reason: z.string().nullable(),
   }),
 });

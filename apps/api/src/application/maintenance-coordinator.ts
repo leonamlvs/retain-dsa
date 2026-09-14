@@ -46,6 +46,12 @@ export class MaintenanceCoordinator {
   private async process(operationId: string, config: StudyConfig): Promise<void> {
     const provider = typeof this.provider === 'function' ? this.provider(config) : this.provider;
     const operationDeadline = new Date(this.clock.now().getTime() + config.discovery.totalBudgetMs);
+    // Publish from valid cached/catalog anchors before optional provider discovery. On a fresh
+    // install this makes the synchronized curriculum usable without waiting for a full scan.
+    await this.study.replenish(
+      config.version,
+      this.study.claimMaintenance ? operationId : undefined,
+    );
     const needs = await this.study.discoveryNeeds(config.version);
     let failed = false;
     for (const original of needs) {
